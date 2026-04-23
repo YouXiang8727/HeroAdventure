@@ -27,7 +27,10 @@ jobs:
       - name: Prepare deployment directory
         run: |
           mkdir -p public
+          # 複製編譯產物
           cp -r composeApp/build/dist/wasmJs/productionExecutable/* public/
+          # 複製 vercel.json 到部署目錄
+          cp vercel.json public/
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
