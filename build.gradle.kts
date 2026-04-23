@@ -4,4 +4,9 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    id("com.github.node-gradle.node") version "3.0.1"
+}
+
+node {
+    download = false  // 禁止自動下載 Node.js
 }

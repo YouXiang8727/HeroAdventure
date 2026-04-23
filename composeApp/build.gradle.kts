@@ -1,7 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -11,9 +9,6 @@ plugins {
 
 kotlin {
     js {
-        nodejs {
-            version = "20.18.0"
-        }
         browser()
         binaries.executable()
     }
@@ -21,9 +16,6 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         outputModuleName.set("composeApp")
-        nodejs {
-            version = "20.18.0"
-        }
         browser {
             commonWebpackConfig {
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
