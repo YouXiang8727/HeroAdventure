@@ -1,0 +1,37 @@
+# Gradle
+.gradle/
+build/
+/*/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Android
+local.properties
+captures/
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+*.bundle
+
+# Kotlin
+.kotlin/
+kotlin-js-store/
+
+# macOS
+.DS_Store
+
+# Log files
+*.log
+
+# Sensitive information
+secrets.properties
