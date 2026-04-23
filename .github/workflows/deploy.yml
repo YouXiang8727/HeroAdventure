@@ -26,11 +26,15 @@ jobs:
 
       - name: Prepare deployment directory
         run: |
-          mkdir -p public
+          mkdir -p deploy_dist
+          # 檢查編譯產物路徑 (偵錯用)
+          ls -R composeApp/build/dist/wasmJs/
           # 複製編譯產物
-          cp -r composeApp/build/dist/wasmJs/productionExecutable/* public/
-          # 複製 vercel.json 到部署目錄
-          cp vercel.json public/
+          cp -r composeApp/build/dist/wasmJs/productionExecutable/* deploy_dist/
+          # 複製 vercel.json 到根目錄
+          cp vercel.json deploy_dist/
+          # 再次確認 deploy_dist 內容
+          ls -F deploy_dist/
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
@@ -38,5 +42,5 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./public
+          working-directory: ./deploy_dist
           vercel-args: '--prod'
