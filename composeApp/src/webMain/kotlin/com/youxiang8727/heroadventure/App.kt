@@ -82,7 +82,6 @@ fun App() {
     ) {
         var gameState by remember { mutableStateOf<GameState>(GameState.CharacterSelection) }
         
-        // 用來追蹤連續幾關沒進商店，實現保底機率
         var stagesWithoutShop by remember { mutableStateOf(0) }
 
         Surface(
@@ -93,7 +92,7 @@ fun App() {
                 is GameState.CharacterSelection -> {
                     CharacterSelectionScreen(onCharacterSelected = { hero ->
                         val firstMonster = Monster.createRandom(1)
-                        stagesWithoutShop = 0 // 重置
+                        stagesWithoutShop = 0
                         gameState = GameState.Battle(hero, firstMonster, 1)
                     })
                 }
@@ -104,29 +103,21 @@ fun App() {
                             monster = state.monster,
                             stageLevel = state.stageLevel,
                             onVictory = { gold ->
-                                state.hero.gold += gold
-                                state.hero.levelUp()
-                                
-                                val hClass = state.hero.heroClass
-                                if (hClass is HeroClass.Paladin) {
-                                    val healAmount = (state.hero.totalMaxHp * hClass.HEAL_PERCENT_ON_VICTORY).toInt()
-                                    state.hero.heal(healAmount)
-                                }
+                                // 呼叫 Hero 模型層的勝利邏輯 (包含加錢、升級、被動回血)
+                                state.hero.onVictory(gold)
                                 
                                 val nextLevel = state.stageLevel + 1
-                                
-                                // 基礎機率 20%，每多一關沒進商店就增加 10% 機率
                                 val shopChance = 0.20 + (stagesWithoutShop * 0.10)
                                 
                                 if (Random.nextDouble() < shopChance) {
-                                    stagesWithoutShop = 0 // 進入商店後重置
+                                    stagesWithoutShop = 0
                                     gameState = GameState.Shop(
                                         hero = state.hero,
                                         items = generateRandomShopItems(nextLevel),
                                         nextStageLevel = nextLevel
                                     )
                                 } else {
-                                    stagesWithoutShop++ // 未進入商店，機率累加
+                                    stagesWithoutShop++
                                     val nextMonster = Monster.createRandom(nextLevel)
                                     gameState = GameState.Battle(state.hero, nextMonster, nextLevel)
                                 }
