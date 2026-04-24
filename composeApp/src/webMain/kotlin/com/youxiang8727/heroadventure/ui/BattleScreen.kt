@@ -64,6 +64,8 @@ import com.youxiang8727.heroadventure.model.Consumable
 import com.youxiang8727.heroadventure.model.Hero
 import com.youxiang8727.heroadventure.model.HeroClass
 import com.youxiang8727.heroadventure.model.HeroClass.Rogue.CRIT_LIFE_STEAL
+import com.youxiang8727.heroadventure.model.HeroClass.Warrior.ACTIVE_SKILL_ATTACK_BUFFER
+import com.youxiang8727.heroadventure.model.HeroClass.Warrior.LIFE_STEAL_PERCENT
 import com.youxiang8727.heroadventure.model.HeroStat
 import com.youxiang8727.heroadventure.model.Monster
 import com.youxiang8727.heroadventure.model.ShopItem
@@ -254,10 +256,9 @@ fun BattleScreen(
 
                                 when(val hClass = hero.heroClass) {
                                     is HeroClass.Warrior -> {
-                                        val sacrifice = (heroHp * 0.15).toInt()
+                                        val sacrifice = (heroHp * 0.10).toInt()
                                         heroHp = (heroHp - sacrifice).coerceAtLeast(1)
                                         isWarriorBuffActive = true
-                                        // 戰士主動技現在提供 10% 額外格擋邏輯
                                         battleLog = "🩸 獻祭生命，力量與守護湧現！"
                                     }
                                     is HeroClass.Mage -> {
@@ -278,7 +279,7 @@ fun BattleScreen(
                                     }
                                     is HeroClass.Archer -> {
                                         battleLog = "🏹 疾風連射！"
-                                        repeat(4) { // 弓箭手主動技現在是 4 連射
+                                        repeat(4) {
                                             delay(300)
                                             if (monsterHp > 0) {
                                                 val damage = (currentAttack * 0.6).toInt()
@@ -377,7 +378,7 @@ fun BattleScreen(
                                 damage = (damage * damageMultiplier).toInt()
 
                                 if (isWarriorBuffActive) {
-                                    damage = (damage * 1.5).toInt()
+                                    damage = (damage * ACTIVE_SKILL_ATTACK_BUFFER).toInt()
                                     isWarriorBuffActive = false
                                 }
                                 
@@ -385,6 +386,15 @@ fun BattleScreen(
                                 monsterHp = (monsterHp - damage).coerceAtLeast(0)
                                 battleLog = if (isCrit) "🔥 CRITICAL HIT! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
                                 
+                                // 戰士被動吸血邏輯
+                                if (hClass is HeroClass.Warrior) {
+                                    val healAmt = (damage * LIFE_STEAL_PERCENT).toInt()
+                                    if (healAmt > 0) {
+                                        heroHp = (heroHp + healAmt).coerceAtMost(currentMaxHp)
+                                        battleLog += " (吸血 +$healAmt)"
+                                    }
+                                }
+
                                 if (isRogueCritBuffActive && isCrit) {
                                     val healAmt = (damage * CRIT_LIFE_STEAL).toInt()
                                     heroHp = (heroHp + healAmt).coerceAtMost(currentMaxHp)
@@ -431,7 +441,7 @@ fun BattleScreen(
                                 delay(600)
                             } else {
                                 // 戰士主動技額外格擋邏輯
-                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && isWarriorBuffActive) 0.1 else 0.0
+                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && isWarriorBuffActive) 0.2 else 0.0
                                 val isBlocked = Random.nextDouble() < (currentBlock + warriorBonusBlock)
 
                                 val rawMonsterDamage = monster.attack

@@ -15,18 +15,20 @@ sealed class HeroClass(
     val startingArmor: String? = null
 ) {
     data object Warrior : HeroClass(
-        "戰士", 250, 35, 18, 5, 
-        critRate = 0.08, blockRate = 0.12,
+        "戰士", 280, 35, 22, 6, 
+        critRate = 0.08, blockRate = 0.15,
         passiveName = "破釜沈舟",
-        passiveDescription = "生命值越低攻擊力越高，每失去 1% 生命提升 0.5% 攻擊力。",
+        passiveDescription = "生命越低攻擊越高(每失去1%生命+0.8%攻擊)；且每次造成傷害恢復8%血量。",
         activeSkill = ActiveSkill(
             name = "血祭衝擊",
-            description = "消耗 15% 目前生命，本回合獲得 10% 額外格擋，且下回合攻擊提升 50% 並造成無視防禦傷害。",
+            description = "消耗 10% 目前生命，本回合獲得 20% 額外格擋，且下次攻擊傷害提升 100%",
             energyRequired = 2
         ),
         startingWeapon = "生鏽長劍 (+5 ATK)"
     ) {
-        const val ATTACK_BONUS_PER_LOST_HP = 0.5
+        const val ATTACK_BONUS_PER_LOST_HP = 0.8
+        const val LIFE_STEAL_PERCENT = 0.08
+        const val ACTIVE_SKILL_ATTACK_BUFFER = 2.0
     }
 
     data object Mage : HeroClass(
