@@ -91,7 +91,7 @@ fun ShopScreen(
             ) {
                 Text(
                     text = "MYSTIC SHOP",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFFFD700)
                 )
@@ -102,14 +102,14 @@ fun ShopScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.6f))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("💰", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("💰", fontSize = 14.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "STAGE ${hero.level}",
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFFD700)
                         )
@@ -122,11 +122,11 @@ fun ShopScreen(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 color = Color.White.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
             ) {
                 Row(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     EntityDisplay(
@@ -138,7 +138,7 @@ fun ShopScreen(
                         isMonster = false,
                         hpBarWidth = 160.dp,
                         hpBarHeight = 16.dp,
-                        fontSize = 13.sp
+                        fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     StatBadge(HeroStat.CritRate(hero.totalCritRate))
@@ -148,7 +148,7 @@ fun ShopScreen(
                     // 右側裝備
                     Row(
                         modifier = Modifier.padding(start = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         MiniEquipSlot("武", hero.weapon) { hero.unequipWeapon() }
                         MiniEquipSlot("防", hero.armor) { hero.unequipArmor() }
@@ -159,10 +159,11 @@ fun ShopScreen(
             // 訊息列
             Text(
                 text = message,
-                fontSize = 11.sp,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF4DFFFF),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 4.dp).fillMaxWidth()
+                modifier = Modifier.padding(bottom = 6.dp).fillMaxWidth()
             )
 
             // 主要內容區
@@ -171,10 +172,10 @@ fun ShopScreen(
             ) {
                 SectionTitle("🛒 商店貨架 (限購碎片)")
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 120.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.heightIn(max = 280.dp)
+                    columns = GridCells.Adaptive(minSize = 130.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.heightIn(max = 300.dp)
                 ) {
                     items(shopItems) { item ->
                         val isBought = boughtItems[item] ?: false
@@ -200,19 +201,19 @@ fun ShopScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 SectionTitle("🎒 背包")
                 if (hero.inventory.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().height(50.dp), contentAlignment = Alignment.Center) {
-                        Text("背包暫無物品", color = Color.White.copy(alpha = 0.2f), fontSize = 11.sp)
+                    Box(modifier = Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                        Text("背包暫無物品", color = Color.White.copy(alpha = 0.3f), fontSize = 13.sp)
                     }
                 } else {
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 120.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.heightIn(max = 350.dp)
+                        columns = GridCells.Adaptive(minSize = 130.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.heightIn(max = 400.dp)
                     ) {
                         items(hero.inventory) { item ->
                             val sellPrice = (item.price * 0.8).toInt()
@@ -233,12 +234,12 @@ fun ShopScreen(
                                         hero.inventory.remove(item)
                                         message = "售出獲得 $sellPrice G"
                                     },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp).height(22.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(28.dp),
                                     contentPadding = PaddingValues(0.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.4f)),
-                                    shape = RoundedCornerShape(4.dp)
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.5f)),
+                                    shape = RoundedCornerShape(6.dp)
                                 ) {
-                                    Text("出售: $sellPrice G", fontSize = 8.sp)
+                                    Text("出售: $sellPrice G", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -246,15 +247,15 @@ fun ShopScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             Button(
                 onClick = onContinue,
-                modifier = Modifier.fillMaxWidth(0.5f).height(40.dp).shadow(4.dp, RoundedCornerShape(20.dp)),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth(0.6f).height(46.dp).shadow(6.dp, RoundedCornerShape(23.dp)),
+                shape = RoundedCornerShape(23.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE94560))
             ) {
-                Text("繼續冒險", fontSize = 13.sp, fontWeight = FontWeight.Black)
+                Text("繼續冒險", fontSize = 15.sp, fontWeight = FontWeight.Black)
             }
         }
     }
@@ -267,19 +268,19 @@ fun MiniEquipSlot(label: String, item: ShopItem?, onUnequip: () -> Unit) {
         val slotBox = @Composable {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(if (item != null) item.rarity.color.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.03f))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (item != null) item.rarity.color.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f))
                     .border(
                         1.dp,
-                        if (item != null) item.rarity.color.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f),
-                        RoundedCornerShape(6.dp)
+                        if (item != null) item.rarity.color.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.15f),
+                        RoundedCornerShape(8.dp)
                     )
                     .clickable(enabled = item != null) { onUnequip() },
                 contentAlignment = Alignment.Center
             ) {
-                if (item != null) Text(item.name.take(2), fontSize = 9.sp, fontWeight = FontWeight.Black, color = item.rarity.color)
-                else Text(label, fontSize = 8.sp, color = Color.White.copy(alpha = 0.1f))
+                if (item != null) Text(item.name.take(2), fontSize = 11.sp, fontWeight = FontWeight.Black, color = item.rarity.color)
+                else Text(label, fontSize = 10.sp, color = Color.White.copy(alpha = 0.2f), fontWeight = FontWeight.Bold)
             }
         }
 
@@ -288,15 +289,15 @@ fun MiniEquipSlot(label: String, item: ShopItem?, onUnequip: () -> Unit) {
                 positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
                 tooltip = {
                     PlainTooltip(
-                        containerColor = Color.Black.copy(alpha = 0.9f),
+                        containerColor = Color(0xFF24243E),
                         contentColor = Color.White,
-                        shape = RoundedCornerShape(4.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        Column(modifier = Modifier.padding(6.dp)) {
-                            Text(text = item.name, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, color = item.rarity.color)
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(text = item.name, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = item.rarity.color)
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.2f))
-                            Text("等級: ${item.level}", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                            Text("效果: ${item.description}", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                            Text("等級: ${item.level}", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
+                            Text("效果: ${item.description}", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
                         }
                     }
                 },
@@ -314,10 +315,10 @@ fun MiniEquipSlot(label: String, item: ShopItem?, onUnequip: () -> Unit) {
 fun SectionTitle(title: String) {
     Text(
         text = title,
-        fontSize = 11.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Black,
-        color = Color.White.copy(alpha = 0.6f),
-        modifier = Modifier.padding(vertical = 4.dp)
+        color = Color.White.copy(alpha = 0.8f),
+        modifier = Modifier.padding(vertical = 6.dp)
     )
 }
 
@@ -332,35 +333,35 @@ fun ShopItemCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (isAvailable && !isSoldOut) item.rarity.color.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f)),
-        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.3f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (isAvailable && !isSoldOut) item.rarity.color.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f))
     ) {
         Column(
-            modifier = Modifier.padding(6.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = item.rarity.label,
                 color = item.rarity.color,
-                fontSize = 7.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 9.sp,
+                fontWeight = FontWeight.ExtraBold
             )
-            Text(text = item.name, fontWeight = FontWeight.Black, fontSize = 11.sp, color = Color.White, textAlign = TextAlign.Center, maxLines = 1)
-            Text(item.description, fontSize = 8.sp, color = Color.White.copy(alpha = 0.6f), textAlign = TextAlign.Center, maxLines = 1)
-            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = item.name, fontWeight = FontWeight.Black, fontSize = 13.sp, color = Color.White, textAlign = TextAlign.Center, maxLines = 1)
+            Text(item.description, fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f), textAlign = TextAlign.Center, maxLines = 1)
+            Spacer(modifier = Modifier.height(6.dp))
             Button(
                 onClick = onAction,
                 enabled = isAvailable,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSoldOut) Color.Gray else item.rarity.color.copy(alpha = 0.7f),
+                    containerColor = if (isSoldOut) Color.Gray else item.rarity.color.copy(alpha = 0.8f),
                     contentColor = Color.White,
-                    disabledContainerColor = Color.White.copy(alpha = 0.05f)
+                    disabledContainerColor = Color.White.copy(alpha = 0.1f)
                 ),
-                contentPadding = PaddingValues(horizontal = 4.dp),
-                modifier = Modifier.height(24.dp).fillMaxWidth(),
-                shape = RoundedCornerShape(6.dp)
+                contentPadding = PaddingValues(horizontal = 6.dp),
+                modifier = Modifier.height(28.dp).fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text(buttonText, fontSize = 8.sp, fontWeight = FontWeight.Black)
+                Text(buttonText, fontSize = 10.sp, fontWeight = FontWeight.Black)
             }
         }
     }

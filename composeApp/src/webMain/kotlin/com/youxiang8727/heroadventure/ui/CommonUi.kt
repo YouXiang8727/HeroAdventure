@@ -46,15 +46,15 @@ import com.youxiang8727.heroadventure.model.ShopItem
 fun StatBadge(stat: HeroStat, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
-        color = stat.color.copy(alpha = 0.1f),
+        color = stat.color.copy(alpha = 0.15f),
         shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(1.dp, stat.color.copy(alpha = 0.3f))
+        border = BorderStroke(1.dp, stat.color.copy(alpha = 0.4f))
     ) {
         Text(
             text = "${stat.icon} ${stat.label}: ${stat.formattedValue}",
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.ExtraBold,
             color = stat.color
         )
     }
@@ -87,8 +87,9 @@ fun EntityDisplay(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Surface(
-                color = Color.White.copy(alpha = 0.1f), 
-                shape = RoundedCornerShape(4.dp)
+                color = Color.White.copy(alpha = 0.15f), 
+                shape = RoundedCornerShape(4.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
@@ -96,14 +97,14 @@ fun EntityDisplay(
                 ) {
                     Text(
                         text = "ATK: $attack",
-                        fontSize = (fontSize.value * 0.7).sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = (fontSize.value * 0.75).sp,
+                        fontWeight = FontWeight.ExtraBold,
                         color = Color.White
                     )
                     if (passiveBonus > 0) {
                         Text(
                             text = " (+$passiveBonus)",
-                            fontSize = (fontSize.value * 0.6).sp,
+                            fontSize = (fontSize.value * 0.65).sp,
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF4DFF88) // 綠色代表被動加成
                         )
@@ -117,8 +118,8 @@ fun EntityDisplay(
                 .width(hpBarWidth)
                 .height(hpBarHeight)
                 .clip(RoundedCornerShape(hpBarHeight / 2))
-                .background(Color.Black.copy(alpha = 0.3f))
-                .border(1.dp, mainColor.copy(alpha = 0.4f), RoundedCornerShape(hpBarHeight / 2)),
+                .background(Color.Black.copy(alpha = 0.4f))
+                .border(1.dp, mainColor.copy(alpha = 0.5f), RoundedCornerShape(hpBarHeight / 2)),
             contentAlignment = Alignment.Center
         ) {
             val progress by animateFloatAsState(targetValue = if (maxHp > 0) currentHp.toFloat() / maxHp else 0f)
@@ -127,16 +128,16 @@ fun EntityDisplay(
                     .fillMaxWidth(progress)
                     .fillMaxHeight()
                     .align(Alignment.CenterStart)
-                    .background(Brush.horizontalGradient(listOf(mainColor.copy(alpha = 0.5f), mainColor)))
+                    .background(Brush.horizontalGradient(listOf(mainColor.copy(alpha = 0.6f), mainColor)))
             )
 
             Text(
                 text = "$currentHp / $maxHp",
-                fontSize = (hpBarHeight.value * 0.6).sp,
+                fontSize = (hpBarHeight.value * 0.65).sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White,
                 textAlign = TextAlign.Center,
-                lineHeight = (hpBarHeight.value * 0.6).sp,
+                lineHeight = (hpBarHeight.value * 0.65).sp,
                 modifier = Modifier.offset(y = (-1).dp)
             )
         }
@@ -159,10 +160,10 @@ fun EquipmentSlot(
             modifier = Modifier
                 .size(size)
                 .clip(RoundedCornerShape(size / 5))
-                .background(if (item != null) item.rarity.color.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.03f))
+                .background(if (item != null) item.rarity.color.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f))
                 .border(
                     1.dp,
-                    if (item != null) item.rarity.color.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+                    if (item != null) item.rarity.color.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.15f),
                     RoundedCornerShape(size / 5)
                 )
                 .clickable(enabled = item != null) { onUnequip() },
@@ -171,15 +172,16 @@ fun EquipmentSlot(
             if (item != null) {
                 Text(
                     item.name.take(2),
-                    fontSize = (size.value * 0.3).sp,
-                    fontWeight = FontWeight.Black,
+                    fontSize = (size.value * 0.35).sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = item.rarity.color
                 )
             } else {
                 Text(
                     label,
-                    fontSize = (size.value * 0.25).sp,
-                    color = Color.White.copy(alpha = 0.1f)
+                    fontSize = (size.value * 0.3).sp,
+                    color = Color.White.copy(alpha = 0.2f),
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -190,15 +192,15 @@ fun EquipmentSlot(
             positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
             tooltip = {
                 PlainTooltip(
-                    containerColor = Color.Black.copy(alpha = 0.9f),
+                    containerColor = Color(0xFF24243E),
                     contentColor = Color.White,
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Column(modifier = Modifier.padding(6.dp)) {
-                        Text(text = item.name, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, color = item.rarity.color)
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(text = item.name, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = item.rarity.color)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.2f))
-                        Text("等級: ${item.level}", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                        Text("效果: ${item.description}", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                        Text("等級: ${item.level}", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
+                        Text("效果: ${item.description}", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
                     }
                 }
             },

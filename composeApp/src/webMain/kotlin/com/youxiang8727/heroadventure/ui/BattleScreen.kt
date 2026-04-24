@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -85,13 +86,11 @@ fun BattleScreen(
     var isPlayerTurn by remember { mutableStateOf(true) }
     var isBattleOver by remember { mutableStateOf(false) }
 
-    // 主動技能相關狀態
     var shieldHp by remember { mutableStateOf(0) }
     var isWarriorBuffActive by remember { mutableStateOf(false) }
     var isMageNextDoubleActive by remember { mutableStateOf(false) }
     var isRogueCritBuffActive by remember { mutableStateOf(false) }
 
-    // 被動技能觸發狀態
     var isPassiveTriggered by remember { mutableStateOf(false) }
     val passiveScale by animateFloatAsState(
         targetValue = if (isPassiveTriggered) 1.2f else 1.0f,
@@ -129,11 +128,10 @@ fun BattleScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 關卡標籤
             Surface(
                 shape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp),
-                color = Color(0xFFFFD700).copy(alpha = 0.1f),
-                border = BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.3f))
+                color = Color(0xFFFFD700).copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.4f))
             ) {
                 Text(
                     "STAGE $stageLevel",
@@ -144,7 +142,6 @@ fun BattleScreen(
                 )
             }
 
-            // 怪物區
             Box(
                 modifier = Modifier
                     .weight(0.7f)
@@ -161,14 +158,13 @@ fun BattleScreen(
                 )
             }
 
-            // 戰鬥日誌
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.5f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
             ) {
                 Box(modifier = Modifier.fillMaxSize().padding(8.dp), contentAlignment = Alignment.Center) {
                     AnimatedContent(targetState = battleLog) { text ->
@@ -177,7 +173,6 @@ fun BattleScreen(
                 }
             }
 
-            // 玩家區
             Box(
                 modifier = Modifier
                     .weight(0.9f)
@@ -195,11 +190,10 @@ fun BattleScreen(
                             mainColor = Color(0xFF4DFF88),
                             isMonster = false
                         )
-                        // 護盾顯示
                         if (shieldHp > 0) {
                             Surface(
                                 modifier = Modifier.offset(y = 20.dp),
-                                color = Color(0xFF4DFFFF).copy(alpha = 0.8f),
+                                color = Color(0xFF4DFFFF).copy(alpha = 0.9f),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 Text("🛡️ $shieldHp", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
@@ -213,23 +207,30 @@ fun BattleScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 被動技能標籤
                         TooltipBox(
                             positionProvider = rememberTooltipPositionProvider(),
                             tooltip = {
-                                PlainTooltip(containerColor = Color.Black.copy(alpha = 0.9f)) {
-                                    Text(hero.heroClass.passiveDescription, fontSize = 10.sp)
+                                PlainTooltip(
+                                    containerColor = Color(0xFF24243E),
+                                    contentColor = Color.White,
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(8.dp).widthIn(max = 200.dp)) {
+                                        Text("被動技能", fontWeight = FontWeight.Bold, color = Color(0xFF4DFFFF), fontSize = 13.sp)
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.2f))
+                                        Text(hero.heroClass.passiveDescription, fontSize = 12.sp, lineHeight = 16.sp)
+                                    }
                                 }
                             },
                             state = rememberTooltipState()
                         ) {
                             Surface(
                                 modifier = Modifier.graphicsLayer(scaleX = passiveScale, scaleY = passiveScale),
-                                color = if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700).copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f),
+                                color = if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
                                 shape = RoundedCornerShape(4.dp),
                                 border = BorderStroke(
                                     1.dp, 
-                                    if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700) else Color.White.copy(alpha = 0.2f)
+                                    if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700) else Color.White.copy(alpha = 0.3f)
                                 )
                             ) {
                                 Text(
@@ -242,7 +243,6 @@ fun BattleScreen(
                             }
                         }
 
-                        // 主動技能按鈕 (文字形式，樣式與被動一致)
                         ActiveSkillTextButton(hero, isPlayerTurn && !isBattleOver) {
                             scope.launch {
                                 isPlayerTurn = false
@@ -306,12 +306,11 @@ fun BattleScreen(
                 }
             }
 
-            // 裝備與背包
             Surface(
                 modifier = Modifier.fillMaxWidth().weight(2f),
-                color = Color.White.copy(alpha = 0.05f),
+                color = Color.White.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
             ) {
                 Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -320,9 +319,9 @@ fun BattleScreen(
                         EquipmentSlot("防具", hero.armor, size = 44.dp) { hero.unequipArmor() }
                     }
                     
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
 
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         val consumables = hero.inventory.filterIsInstance<Consumable>()
                         val weapons = hero.inventory.filterIsInstance<Weapon>()
                         val armors = hero.inventory.filterIsInstance<Armor>()
@@ -345,14 +344,11 @@ fun BattleScreen(
                 }
             }
 
-            // 動作按鈕區
             Button(
                 onClick = {
                     if (isPlayerTurn && !isBattleOver) {
                         scope.launch {
                             isPlayerTurn = false
-                            
-                            // 只要發動攻擊，就立刻累積能量
                             hero.gainEnergy()
 
                             suspend fun triggerPassiveEffect() {
@@ -474,7 +470,6 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
     val skill = hero.heroClass.activeSkill
     val isReady = hero.energy >= hero.maxEnergy
     
-    // 平滑動畫進度
     val animatedProgress by animateFloatAsState(
         targetValue = hero.energy.toFloat() / hero.maxEnergy,
         animationSpec = spring(stiffness = Spring.StiffnessLow)
@@ -491,11 +486,17 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
     TooltipBox(
         positionProvider = rememberTooltipPositionProvider(),
         tooltip = {
-            PlainTooltip(containerColor = Color.Black.copy(alpha = 0.9f)) {
-                Column(modifier = Modifier.padding(4.dp)) {
-                    Text(skill.name, fontWeight = FontWeight.Bold, color = activeColor)
-                    Text(skill.description, fontSize = 10.sp)
-                    Text("消耗能量: ${skill.energyRequired}⚡", fontSize = 9.sp, color = Color.Gray)
+            PlainTooltip(
+                containerColor = Color(0xFF24243E),
+                contentColor = Color.White,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp).widthIn(max = 220.dp)) {
+                    Text(skill.name, fontWeight = FontWeight.ExtraBold, color = activeColor, fontSize = 16.sp)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.2f))
+                    Text(skill.description, fontSize = 13.sp, lineHeight = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("⚡ 能量消耗: ${skill.energyRequired}", fontSize = 11.sp, color = Color(0xFFFFD700), fontWeight = FontWeight.Bold)
                 }
             }
         },
@@ -504,11 +505,11 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
         Surface(
             modifier = Modifier
                 .clickable(enabled = isEnabled && isReady) { onClick() },
-            color = Color.White.copy(alpha = 0.05f),
+            color = Color.White.copy(alpha = 0.08f),
             shape = RoundedCornerShape(4.dp),
             border = BorderStroke(
                 1.dp, 
-                if (isReady) activeColor else Color.White.copy(alpha = 0.2f)
+                if (isReady) activeColor else Color.White.copy(alpha = 0.3f)
             )
         ) {
             Text(
@@ -517,14 +518,14 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
                     .drawBehind {
                         val progressWidth = size.width * animatedProgress
                         drawRect(
-                            color = if (isReady) activeColor.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.15f),
+                            color = if (isReady) activeColor.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.2f),
                             size = Size(progressWidth, size.height)
                         )
                     }
                     .padding(horizontal = 8.dp, vertical = 2.dp),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isReady) activeColor else Color.White.copy(alpha = 0.4f),
+                color = if (isReady) activeColor else Color.White,
                 textAlign = TextAlign.Center
             )
         }
@@ -534,25 +535,45 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryRow(title: String, items: List<ShopItem>, isEnabled: Boolean, onUse: (ShopItem) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().height(36.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.5f), modifier = Modifier.width(45.dp))
+    Row(modifier = Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.width(50.dp))
         if (items.isEmpty()) {
-            Text("無", fontSize = 9.sp, color = Color.White.copy(alpha = 0.2f))
+            Text("無", fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
         } else {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(items) { item ->
                     TooltipBox(
                         positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
-                        tooltip = { PlainTooltip { Text(item.description, fontSize = 10.sp) } },
+                        tooltip = { 
+                            PlainTooltip(
+                                containerColor = Color(0xFF24243E),
+                                contentColor = Color.White,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp).widthIn(max = 180.dp)) {
+                                    Text(item.name, fontWeight = FontWeight.Bold, color = item.rarity.color, fontSize = 14.sp)
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.15f))
+                                    Text(item.description, fontSize = 12.sp, lineHeight = 16.sp)
+                                }
+                            }
+                        },
                         state = rememberTooltipState()
                     ) {
                         Surface(
-                            modifier = Modifier.width(75.dp).clickable(enabled = isEnabled) { onUse(item) },
-                            color = Color.White.copy(alpha = 0.05f),
-                            shape = RoundedCornerShape(4.dp),
-                            border = BorderStroke(1.dp, item.rarity.color.copy(alpha = 0.4f))
+                            modifier = Modifier.width(85.dp).clickable(enabled = isEnabled) { onUse(item) },
+                            color = Color.White.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.2.dp, item.rarity.color.copy(alpha = 0.7f))
                         ) {
-                            Text(item.name, modifier = Modifier.padding(vertical = 2.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = item.rarity.color, textAlign = TextAlign.Center, maxLines = 1)
+                            Text(
+                                text = item.name, 
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp), 
+                                fontSize = 10.sp, 
+                                fontWeight = FontWeight.ExtraBold, 
+                                color = item.rarity.color, 
+                                textAlign = TextAlign.Center, 
+                                maxLines = 1
+                            )
                         }
                     }
                 }

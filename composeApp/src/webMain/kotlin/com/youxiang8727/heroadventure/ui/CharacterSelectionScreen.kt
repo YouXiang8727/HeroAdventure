@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -112,35 +114,17 @@ fun CharacterSelectionScreen(onCharacterSelected: (Hero) -> Unit) {
                             initialHp = hClass.baseHp,
                             initialMaxHp = hClass.baseHp,
                             initialAttack = hClass.baseAttack,
-                            initialGold = 50 // 平衡後的起始金幣
+                            initialGold = 50 
                         )
                         
                         hero.inventory.add(HealthPotion(healAmount = 50, price = 20))
                         hero.inventory.add(HealthPotion(healAmount = 50, price = 20))
                         
                         when(hClass) {
-                            is HeroClass.Warrior -> hero.inventory.add(
-                                Sword(
-                                    "生鏽長劍",
-                                    attack = 5,
-                                    price = 30
-                                )
-                            )
-                            is HeroClass.Mage -> hero.inventory.add(
-                                Staff(
-                                    "學徒法杖",
-                                    attack = 8,
-                                    price = 35
-                                )
-                            )
+                            is HeroClass.Warrior -> hero.inventory.add(Sword("生鏽長劍", attack = 5, price = 30))
+                            is HeroClass.Mage -> hero.inventory.add(Staff("學徒法杖", attack = 8, price = 35))
                             is HeroClass.Rogue -> hero.inventory.add(Sword("新手匕首", attack = 4, price = 25))
-                            is HeroClass.Paladin -> hero.inventory.add(
-                                LightArmor(
-                                    "舊皮甲",
-                                    hp = 30,
-                                    price = 30
-                                )
-                            )
+                            is HeroClass.Paladin -> hero.inventory.add(LightArmor("舊皮甲", hp = 30, price = 30))
                             is HeroClass.Archer -> hero.inventory.add(Sword("獵人短劍", attack = 6, price = 30))
                         }
                         
@@ -189,88 +173,103 @@ fun CharacterCardWithTooltip(
         positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
         tooltip = {
             PlainTooltip(
-                containerColor = Color.Black.copy(alpha = 0.95f),
+                containerColor = Color(0xFF24243E),
                 contentColor = Color.White,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Column(modifier = Modifier.padding(8.dp).widthIn(max = 260.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .widthIn(max = 280.dp)
+                ) {
                     Text(
                         text = heroClass.className,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         color = Color(0xFFFFD700)
                     )
                     
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.2f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp), 
+                        color = Color.White.copy(alpha = 0.2f)
+                    )
                     
-                    // 成長數值
                     DetailRow("📈 生命成長", "+${heroClass.hpGrowth}")
                     DetailRow("⚔️ 攻擊成長", "+${heroClass.attackGrowth}")
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // 初始物資區
-                    Text("🎁 初始物資", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFA500))
-                    Column(modifier = Modifier.padding(start = 4.dp, top = 2.dp)) {
-                        Text("• ${heroClass.startingWeapon}", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                        heroClass.startingArmor?.let {
-                            Text("• $it", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                        }
-                        Text("• 生命藥水 x2", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                    if (heroClass.blockRate > 0) {
+                        DetailRow("🛡️ 基礎格擋", "${(heroClass.blockRate * 100).toInt()}%")
+                    } else if (heroClass.critRate > 0) {
+                        DetailRow("💥 基礎暴擊", "${(heroClass.critRate * 100).toInt()}%")
                     }
-
+                    
                     Spacer(modifier = Modifier.height(10.dp))
                     
-                    // 被動技能
+                    Text("🎁 初始物資", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFA500))
+                    Column(modifier = Modifier.padding(start = 6.dp, top = 4.dp)) {
+                        Text("• ${heroClass.startingWeapon}", fontSize = 11.sp, color = Color.White.copy(alpha = 0.95f))
+                        heroClass.startingArmor?.let {
+                            Text("• $it", fontSize = 11.sp, color = Color.White.copy(alpha = 0.95f))
+                        }
+                        Text("• 生命藥水 x2", fontSize = 11.sp, color = Color.White.copy(alpha = 0.95f))
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
                     Surface(
                         color = Color.White.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(6.dp)) {
+                        Column(modifier = Modifier.padding(8.dp)) {
                             Text(
                                 text = "被動：${heroClass.passiveName}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
                                 color = Color(0xFF4DFFFF)
                             )
                             Text(
                                 text = heroClass.passiveDescription,
-                                fontSize = 11.sp,
-                                color = Color.White.copy(alpha = 0.8f),
-                                lineHeight = 14.sp
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.9f),
+                                lineHeight = 16.sp
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // 主動技能
                     Surface(
                         color = Color.White.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(6.dp)) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(
+                                text = "主動：${heroClass.activeSkill.name}",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
+                                color = Color(0xFFFF4D4D)
+                            )
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "主動：${heroClass.activeSkill.name}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFFFF4D4D)
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFD700),
+                                    modifier = Modifier.size(12.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "(消耗: ${heroClass.activeSkill.energyRequired}⚡)",
-                                    fontSize = 9.sp,
-                                    color = Color.White.copy(alpha = 0.5f)
+                                    text = " 消耗能量: ${heroClass.activeSkill.energyRequired}",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFFFD700),
+                                    fontWeight = FontWeight.ExtraBold
                                 )
                             }
                             Text(
                                 text = heroClass.activeSkill.description,
-                                fontSize = 11.sp,
-                                color = Color.White.copy(alpha = 0.8f),
-                                lineHeight = 14.sp
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.9f),
+                                lineHeight = 16.sp
                             )
                         }
                     }
@@ -286,11 +285,11 @@ fun CharacterCardWithTooltip(
 @Composable
 fun DetailRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f))
-        Text(value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.85f))
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
     }
 }
 
@@ -319,28 +318,28 @@ fun CharacterCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp) // 縮小高度
+            .heightIn(min = 180.dp)
             .clickable { onClick() }
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) cardColor else Color.White.copy(alpha = 0.1f),
+                color = if (isSelected) cardColor else Color.White.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) cardColor.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.04f)
+            containerColor = if (isSelected) cardColor.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.05f)
         )
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // 置中顯示
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(56.dp) 
                     .background(
                         Brush.radialGradient(
                             listOf(cardColor.copy(alpha = 0.3f), Color.Transparent)
@@ -351,11 +350,9 @@ fun CharacterCard(
             ) {
                 Text(
                     text = emoji,
-                    fontSize = 32.sp
+                    fontSize = 28.sp
                 )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = heroClass.className,
@@ -363,30 +360,14 @@ fun CharacterCard(
                 fontWeight = FontWeight.Black,
                 color = if (isSelected) cardColor else Color.White
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 StatRow(Icons.Default.Favorite, "生命", "${heroClass.baseHp}", Color(0xFFFF4D4D))
                 StatRow(Icons.Default.Star, "攻擊", "${heroClass.baseAttack}", Color(0xFFFFA500))
-                
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val subStatIcon = if (heroClass.blockRate > 0) "🛡️" else "💥"
-                    val subStatValue = if (heroClass.blockRate > 0) 
-                        "${(heroClass.blockRate * 100).toInt()}%" else 
-                        "${(heroClass.critRate * 100).toInt()}%"
-                    
-                    Text(text = subStatIcon, fontSize = 10.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (heroClass.blockRate > 0) "防禦: $subStatValue" else "暴擊: $subStatValue",
-                        fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
-                }
             }
         }
     }
@@ -400,7 +381,7 @@ fun StatRow(icon: ImageVector, label: String, value: String, color: Color) {
     ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "$label: ", fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f))
-        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(text = "$label: ", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
+        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
     }
 }
