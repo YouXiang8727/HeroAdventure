@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -327,12 +328,15 @@ fun BattleScreen(
                                 val critMult = if (isCrit) hClass.getCritMultiplier() else 1.0
                                 
                                 var damage = (hero.totalAttack * critMult).toInt()
-                                damage = (damage * damageMultiplier).toInt()
-
+                                
+                                // 修正處：檢查主動技傷害加成
                                 if (hero.isWarriorBuffActive) {
-                                    damage = (damage * HeroClass.Warrior.SKILL_ATK_BUFF).toInt()
+                                    val skillMult = hClass.getSkillAtkMultiplier()
+                                    damage = (damage * skillMult).toInt()
                                     hero.isWarriorBuffActive = false
                                 }
+
+                                damage = (damage * damageMultiplier).toInt()
                                 
                                 launch { shake(monsterShakeOffset) }
                                 monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
@@ -347,7 +351,7 @@ fun BattleScreen(
                                 return monster.currentHp <= 0
                             }
 
-                            val critBonus = if (hero.isRogueCritBuffActive) HeroClass.Rogue.SKILL_CRIT_CHANCE_BONUS else 0.0
+                            val critBonus = if (hero.isRogueCritBuffActive) 0.70 else 0.0
                             if (performAttack(critChanceBonus = critBonus)) {
                                 isBattleOver = true
                                 battleLog = "🏆 勝利！擊敗強敵！"
@@ -383,7 +387,7 @@ fun BattleScreen(
                                 delay(600)
                             } else {
                                 val isBlocked = Random.nextDouble() < hero.totalBlockRate
-                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && hero.isWarriorBuffActive) HeroClass.Warrior.SKILL_BLOCK_BONUS else 0.0
+                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && hero.isWarriorBuffActive) 0.20 else 0.0
                                 val finalBlocked = isBlocked || (Random.nextDouble() < warriorBonusBlock)
 
                                 val rawMonsterDamage = monster.attack
@@ -452,7 +456,7 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Bolt,
+                            imageVector = Icons.Default.Bolt,
                             contentDescription = null,
                             tint = Color(0xFFFFD700),
                             modifier = Modifier.size(14.dp)
