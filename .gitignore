@@ -35,3 +35,5 @@ kotlin-js-store/
 
 # Sensitive information
 secrets.properties
+.vercel
+.env*.local

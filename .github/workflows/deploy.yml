@@ -21,20 +21,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Install libatomic
+        run: sudo apt-get update && sudo apt-get install -y libatomic1
+
       - name: Build with Gradle
         run: ./gradlew :composeApp:wasmJsBrowserDistribution
 
       - name: Prepare deployment directory
         run: |
           mkdir -p deploy_dist
-          # 檢查編譯產物路徑 (偵錯用)
-          ls -R composeApp/build/dist/wasmJs/
           # 複製編譯產物
           cp -r composeApp/build/dist/wasmJs/productionExecutable/* deploy_dist/
-          # 複製 vercel.json 到根目錄
+          # 複製 vercel.json 到部署目錄中，確保 Vercel 能讀取配置
           cp vercel.json deploy_dist/
-          # 再次確認 deploy_dist 內容
-          ls -F deploy_dist/
+          # 確認目錄內容
+          ls -R deploy_dist/
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
