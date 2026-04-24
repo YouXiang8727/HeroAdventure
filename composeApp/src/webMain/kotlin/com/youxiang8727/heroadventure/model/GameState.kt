@@ -39,36 +39,40 @@ class Hero(
     var energy by mutableStateOf(0)
     val maxEnergy: Int get() = heroClass.activeSkill.energyRequired
 
+    // 戰鬥狀態
+    var isWarriorBuffActive by mutableStateOf(false)
+    var isMageNextDoubleActive by mutableStateOf(false)
+    var isRogueCritBuffActive by mutableStateOf(false)
+    var shieldHp by mutableStateOf(0)
+
     val inventory = mutableStateListOf<ShopItem>()
     
     var weapon by mutableStateOf<Weapon?>(null)
     var armor by mutableStateOf<Armor?>(null)
 
-    // 基礎攻擊力 (含裝備)
     val baseWithEquipAttack: Int get() = attack + (weapon?.attackBonus ?: 0)
-
-    // 純被動加成數值
-    val attackPassiveBonus: Int get() {
-        return when (val hClass = heroClass) {
-            is HeroClass.Warrior -> {
-                val fullMaxHp = totalMaxHp
-                val lostHpPercent = (fullMaxHp - currentHp).toDouble() / fullMaxHp.coerceAtLeast(1)
-                (baseWithEquipAttack * (lostHpPercent * hClass.ATTACK_BONUS_PER_LOST_HP)).roundToInt()
-            }
-            else -> 0
-        }
-    }
-
-    // 最終總攻擊力
+    val attackPassiveBonus: Int get() = heroClass.getPassiveAttackBonus(baseWithEquipAttack, currentHp, totalMaxHp)
     val totalAttack: Int get() = baseWithEquipAttack + attackPassiveBonus
-
     val totalMaxHp: Int get() = maxHp + (armor?.hpBonus ?: 0)
     
     val totalCritRate: Double get() = heroClass.critRate
     val totalBlockRate: Double get() = heroClass.blockRate
 
     fun takeDamage(damage: Int) {
-        currentHp = (currentHp - damage).coerceAtLeast(0)
+        val actualDamage = if (shieldHp > 0) {
+            val absorbed = damage.coerceAtMost(shieldHp)
+            shieldHp -= absorbed
+            damage - absorbed
+        } else damage
+
+        if (actualDamage > 0) {
+            currentHp = (currentHp - actualDamage).coerceAtLeast(0)
+        }
+    }
+
+    /** 強制扣血 (無視護盾) */
+    fun takeDamageRaw(damage: Int) {
+        currentHp = (currentHp - damage).coerceAtLeast(1)
     }
 
     fun heal(amount: Int) {
@@ -81,6 +85,37 @@ class Hero(
 
     fun resetEnergy() {
         energy = 0
+    }
+
+    fun onAfterAttack(damage: Int, isCrit: Boolean): Int {
+        var totalHeal = heroClass.getLifestealAmount(damage, isCrit)
+        
+        if (heroClass is HeroClass.Rogue && isRogueCritBuffActive && isCrit) {
+            totalHeal += (damage * 0.3).roundToInt()
+        }
+        
+        if (totalHeal > 0) {
+            heal(totalHeal)
+        }
+        return totalHeal
+    }
+
+    fun onVictory(goldEarned: Int) {
+        gold += goldEarned
+        levelUp()
+        
+        val healPercent = heroClass.getHealPercentOnVictory()
+        if (healPercent > 0.0) {
+            heal((totalMaxHp * healPercent).roundToInt())
+        }
+        clearBattleBuffs()
+    }
+
+    fun clearBattleBuffs() {
+        isWarriorBuffActive = false
+        isMageNextDoubleActive = false
+        isRogueCritBuffActive = false
+        shieldHp = 0
     }
 
     fun levelUp() {

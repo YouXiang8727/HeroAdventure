@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,7 +44,6 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,9 +64,6 @@ import com.youxiang8727.heroadventure.model.Armor
 import com.youxiang8727.heroadventure.model.Consumable
 import com.youxiang8727.heroadventure.model.Hero
 import com.youxiang8727.heroadventure.model.HeroClass
-import com.youxiang8727.heroadventure.model.HeroClass.Rogue.CRIT_LIFE_STEAL
-import com.youxiang8727.heroadventure.model.HeroClass.Warrior.ACTIVE_SKILL_ATTACK_BUFFER
-import com.youxiang8727.heroadventure.model.HeroClass.Warrior.LIFE_STEAL_PERCENT
 import com.youxiang8727.heroadventure.model.HeroStat
 import com.youxiang8727.heroadventure.model.Monster
 import com.youxiang8727.heroadventure.model.ShopItem
@@ -83,16 +81,9 @@ fun BattleScreen(
     onVictory: (Int) -> Unit,
     onDefeat: () -> Unit
 ) {
-    var heroHp by remember { mutableStateOf(hero.currentHp) }
-    var monsterHp by remember { mutableStateOf(monster.currentHp) }
     var battleLog by remember { mutableStateOf("遭遇 ${monster.type.monsterName}！") }
     var isPlayerTurn by remember { mutableStateOf(true) }
     var isBattleOver by remember { mutableStateOf(false) }
-
-    var shieldHp by remember { mutableStateOf(0) }
-    var isWarriorBuffActive by remember { mutableStateOf(false) }
-    var isMageNextDoubleActive by remember { mutableStateOf(false) }
-    var isRogueCritBuffActive by remember { mutableStateOf(false) }
 
     var isPassiveTriggered by remember { mutableStateOf(false) }
     val passiveScale by animateFloatAsState(
@@ -104,16 +95,6 @@ fun BattleScreen(
     val heroShakeOffset = remember { Animatable(0f) }
     
     val scope = rememberCoroutineScope()
-
-    val currentAttack = hero.totalAttack
-    val currentCrit = hero.totalCritRate
-    val currentBlock = hero.totalBlockRate
-    val currentMaxHp = hero.totalMaxHp
-    val passiveBonus = hero.attackPassiveBonus
-
-    LaunchedEffect(hero.currentHp) {
-        heroHp = hero.currentHp
-    }
 
     Box(
         modifier = Modifier
@@ -153,7 +134,7 @@ fun BattleScreen(
             ) {
                 EntityDisplay(
                     name = monster.type.monsterName,
-                    currentHp = monsterHp,
+                    currentHp = monster.currentHp,
                     maxHp = monster.maxHp,
                     attack = monster.attack,
                     mainColor = Color(0xFFFF4D4D),
@@ -186,20 +167,20 @@ fun BattleScreen(
                     Box(contentAlignment = Alignment.Center) {
                         EntityDisplay(
                             name = hero.heroClass.className,
-                            currentHp = heroHp,
-                            maxHp = currentMaxHp,
+                            currentHp = hero.currentHp,
+                            maxHp = hero.totalMaxHp,
                             attack = hero.baseWithEquipAttack,
-                            passiveBonus = passiveBonus,
+                            passiveBonus = hero.attackPassiveBonus,
                             mainColor = Color(0xFF4DFF88),
                             isMonster = false
                         )
-                        if (shieldHp > 0) {
+                        if (hero.shieldHp > 0) {
                             Surface(
                                 modifier = Modifier.offset(y = 20.dp),
                                 color = Color(0xFF4DFFFF).copy(alpha = 0.9f),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
-                                Text("🛡️ $shieldHp", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text("🛡️ ${hero.shieldHp}", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -229,11 +210,11 @@ fun BattleScreen(
                         ) {
                             Surface(
                                 modifier = Modifier.graphicsLayer(scaleX = passiveScale, scaleY = passiveScale),
-                                color = if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
+                                color = if (isPassiveTriggered || hero.attackPassiveBonus > 0) Color(0xFFFFD700).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
                                 shape = RoundedCornerShape(4.dp),
                                 border = BorderStroke(
                                     1.dp, 
-                                    if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700) else Color.White.copy(alpha = 0.3f)
+                                    if (isPassiveTriggered || hero.attackPassiveBonus > 0) Color(0xFFFFD700) else Color.White.copy(alpha = 0.3f)
                                 )
                             ) {
                                 Text(
@@ -241,7 +222,7 @@ fun BattleScreen(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isPassiveTriggered || passiveBonus > 0) Color(0xFFFFD700) else Color(0xFF4DFFFF)
+                                    color = if (isPassiveTriggered || hero.attackPassiveBonus > 0) Color(0xFFFFD700) else Color(0xFF4DFFFF)
                                 )
                             }
                         }
@@ -249,66 +230,41 @@ fun BattleScreen(
                         ActiveSkillTextButton(hero, isPlayerTurn && !isBattleOver) {
                             scope.launch {
                                 isPlayerTurn = false
-                                val skill = hero.heroClass.activeSkill
-                                battleLog = "🌟 施放：${skill.name}！"
-                                hero.resetEnergy()
+                                battleLog = "🌟 施放：${hero.heroClass.activeSkill.name}！"
                                 delay(600)
+                                
+                                val log = hero.heroClass.executeActiveSkill(hero, monster)
+                                battleLog = log
+                                hero.resetEnergy()
 
-                                when(val hClass = hero.heroClass) {
-                                    is HeroClass.Warrior -> {
-                                        val sacrifice = (heroHp * 0.10).toInt()
-                                        heroHp = (heroHp - sacrifice).coerceAtLeast(1)
-                                        isWarriorBuffActive = true
-                                        battleLog = "🩸 獻祭生命，力量與守護湧現！"
-                                    }
-                                    is HeroClass.Mage -> {
-                                        isMageNextDoubleActive = true
-                                        battleLog = "🌀 魔力超載，下回合必發動連擊！"
-                                    }
-                                    is HeroClass.Rogue -> {
-                                        isRogueCritBuffActive = true
-                                        battleLog = "🗡️ 鎖定死角，致命一擊！"
-                                    }
-                                    is HeroClass.Paladin -> {
-                                        val damage = (currentAttack + currentMaxHp * currentBlock).toInt()
-                                        launch { shake(monsterShakeOffset) }
-                                        monsterHp = (monsterHp - damage).coerceAtLeast(0)
-                                        val healAmount = (currentMaxHp * hClass.HEAL_PERCENT_ON_VICTORY).toInt()
-                                        heroHp = (heroHp + healAmount).coerceAtMost(currentMaxHp)
-                                        battleLog = "✨ 聖光制裁！造成 $damage 傷害並觸發聖光治癒恢復 $healAmount 生命"
-                                    }
-                                    is HeroClass.Archer -> {
-                                        battleLog = "🏹 疾風連射！"
-                                        repeat(4) {
-                                            delay(300)
-                                            if (monsterHp > 0) {
-                                                val damage = (currentAttack * 0.6).toInt()
-                                                launch { shake(monsterShakeOffset) }
-                                                monsterHp = (monsterHp - damage).coerceAtLeast(0)
-                                                battleLog = "💥 快速射擊！造成 $damage 傷害"
-                                            }
+                                if (hero.heroClass is HeroClass.Archer) {
+                                    repeat(HeroClass.Archer.SKILL_SHOT_COUNT) {
+                                        delay(300)
+                                        if (monster.currentHp > 0) {
+                                            val damage = (hero.totalAttack * 0.6).toInt()
+                                            launch { shake(monsterShakeOffset) }
+                                            monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
+                                            battleLog = "💥 快速射擊！造成 $damage 傷害"
                                         }
                                     }
                                 }
                                 
                                 delay(600)
-                                if (monsterHp <= 0) {
+                                if (monster.currentHp <= 0) {
                                     isBattleOver = true
                                     battleLog = "🏆 勝利！擊敗強敵！"
                                     delay(1000)
-                                    hero.currentHp = heroHp
                                     onVictory(monster.goldDrop)
                                 } else {
                                     isPlayerTurn = true
-                                    hero.currentHp = heroHp
                                 }
                             }
                         }
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatBadge(HeroStat.CritRate(currentCrit))
-                        StatBadge(HeroStat.BlockRate(currentBlock))
+                        StatBadge(HeroStat.CritRate(hero.totalCritRate))
+                        StatBadge(HeroStat.BlockRate(hero.totalBlockRate))
                         StatBadge(HeroStat.Gold(hero.gold))
                     }
                 }
@@ -336,7 +292,6 @@ fun BattleScreen(
 
                         InventoryRow("🧪 藥水", consumables, isPlayerTurn && !isBattleOver) {
                             hero.useItem(it)
-                            heroHp = hero.currentHp
                             battleLog = "✨ 使用了 ${it.name}"
                         }
                         InventoryRow("⚔️ 武器", weapons, isPlayerTurn && !isBattleOver) {
@@ -345,7 +300,6 @@ fun BattleScreen(
                         }
                         InventoryRow("🛡️ 防具", armors, isPlayerTurn && !isBattleOver) {
                             hero.useItem(it)
-                            heroHp = hero.currentHp
                             battleLog = "🛡️ 裝備了 ${it.name}"
                         }
                     }
@@ -366,68 +320,55 @@ fun BattleScreen(
                             }
 
                             suspend fun performAttack(isPassive: Boolean = false, damageMultiplier: Double = 1.0, critChanceBonus: Double = 0.0): Boolean {
-                                val finalCritRate = (currentCrit + critChanceBonus).coerceIn(0.0, 1.0)
+                                val finalCritRate = (hero.totalCritRate + critChanceBonus).coerceIn(0.0, 1.0)
                                 val isCrit = Random.nextDouble() < finalCritRate
                                 val hClass = hero.heroClass
-                                val critMult = if (hClass is HeroClass.Rogue) {
-                                    if (isCrit) launch { triggerPassiveEffect() }
-                                    hClass.CRIT_MULTIPLIER 
-                                } else 2.0
                                 
-                                var damage = if (isCrit) (currentAttack * critMult).toInt() else currentAttack
+                                val critMult = if (isCrit) hClass.getCritMultiplier() else 1.0
+                                
+                                var damage = (hero.totalAttack * critMult).toInt()
                                 damage = (damage * damageMultiplier).toInt()
 
-                                if (isWarriorBuffActive) {
-                                    damage = (damage * ACTIVE_SKILL_ATTACK_BUFFER).toInt()
-                                    isWarriorBuffActive = false
+                                if (hero.isWarriorBuffActive) {
+                                    damage = (damage * HeroClass.Warrior.SKILL_ATK_BUFF).toInt()
+                                    hero.isWarriorBuffActive = false
                                 }
                                 
                                 launch { shake(monsterShakeOffset) }
-                                monsterHp = (monsterHp - damage).coerceAtLeast(0)
+                                monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
                                 battleLog = if (isCrit) "🔥 CRITICAL HIT! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
                                 
-                                // 戰士被動吸血邏輯
-                                if (hClass is HeroClass.Warrior) {
-                                    val healAmt = (damage * LIFE_STEAL_PERCENT).toInt()
-                                    if (healAmt > 0) {
-                                        heroHp = (heroHp + healAmt).coerceAtMost(currentMaxHp)
-                                        battleLog += " (吸血 +$healAmt)"
-                                    }
-                                }
-
-                                if (isRogueCritBuffActive && isCrit) {
-                                    val healAmt = (damage * CRIT_LIFE_STEAL).toInt()
-                                    heroHp = (heroHp + healAmt).coerceAtMost(currentMaxHp)
+                                val healAmt = hero.onAfterAttack(damage, isCrit)
+                                if (healAmt > 0) {
                                     battleLog += " (吸血 +$healAmt)"
                                 }
 
                                 delay(400)
-                                return monsterHp <= 0
+                                return monster.currentHp <= 0
                             }
 
-                            val critBonus = if (isRogueCritBuffActive) 0.5 else 0.0
+                            val critBonus = if (hero.isRogueCritBuffActive) HeroClass.Rogue.SKILL_CRIT_CHANCE_BONUS else 0.0
                             if (performAttack(critChanceBonus = critBonus)) {
                                 isBattleOver = true
                                 battleLog = "🏆 勝利！擊敗強敵！"
                                 delay(1000)
-                                hero.currentHp = heroHp
                                 onVictory(monster.goldDrop)
                                 return@launch
                             }
-                            isRogueCritBuffActive = false
+                            hero.isRogueCritBuffActive = false
 
                             val hClass = hero.heroClass
-                            val canDouble = (hClass is HeroClass.Mage && Random.nextDouble() < hClass.DOUBLE_ATTACK_CHANCE) || isMageNextDoubleActive
+                            val doubleChance = hClass.getDoubleAttackChance()
+                            val canDouble = (Random.nextDouble() < doubleChance) || hero.isMageNextDoubleActive
                             if (canDouble) {
-                                if (!isMageNextDoubleActive) launch { triggerPassiveEffect() }
+                                if (!hero.isMageNextDoubleActive) launch { triggerPassiveEffect() }
                                 battleLog = "✨ 法術回響！再次施法！"
-                                isMageNextDoubleActive = false
+                                hero.isMageNextDoubleActive = false
                                 delay(400)
                                 if (performAttack(isPassive = true)) {
                                     isBattleOver = true
                                     battleLog = "🏆 勝利！擊敗強敵！"
                                     delay(1000)
-                                    hero.currentHp = heroHp
                                     onVictory(monster.goldDrop)
                                     return@launch
                                 }
@@ -435,33 +376,26 @@ fun BattleScreen(
 
                             delay(300)
 
-                            if (hClass is HeroClass.Archer && Random.nextDouble() < hClass.DODGE_CHANCE) {
+                            val dodgeChance = hClass.getDodgeChance()
+                            if (Random.nextDouble() < dodgeChance) {
                                 launch { triggerPassiveEffect() }
                                 battleLog = "🏹 精準閃避！避開了反擊！"
                                 delay(600)
                             } else {
-                                // 戰士主動技額外格擋邏輯
-                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && isWarriorBuffActive) 0.2 else 0.0
-                                val isBlocked = Random.nextDouble() < (currentBlock + warriorBonusBlock)
+                                val isBlocked = Random.nextDouble() < hero.totalBlockRate
+                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && hero.isWarriorBuffActive) HeroClass.Warrior.SKILL_BLOCK_BONUS else 0.0
+                                val finalBlocked = isBlocked || (Random.nextDouble() < warriorBonusBlock)
 
                                 val rawMonsterDamage = monster.attack
-                                var monsterDamage = if (isBlocked) (rawMonsterDamage / 2) else rawMonsterDamage
+                                var monsterDamage = if (finalBlocked) (rawMonsterDamage / 2) else rawMonsterDamage
                                 
-                                if (shieldHp > 0) {
-                                    val absorbed = monsterDamage.coerceAtMost(shieldHp)
-                                    shieldHp -= absorbed
-                                    monsterDamage -= absorbed
-                                    battleLog = "🛡️ 護盾吸收了傷害！"
-                                    delay(300)
-                                }
-
                                 if (monsterDamage > 0) {
                                     launch { shake(heroShakeOffset) }
-                                    heroHp = (heroHp - monsterDamage).coerceAtLeast(0)
-                                    battleLog = if (isBlocked) "🛡️ BLOCK! 僅受 $monsterDamage 傷害" else "⚠️ 受到 $monsterDamage 傷害"
+                                    hero.takeDamage(monsterDamage)
+                                    battleLog = if (finalBlocked) "🛡️ BLOCK! 僅受 $monsterDamage 傷害" else "⚠️ 受到 $monsterDamage 傷害"
                                 }
                                 
-                                if (heroHp <= 0) {
+                                if (hero.currentHp <= 0) {
                                     isBattleOver = true
                                     battleLog = "💀 你倒下了..."
                                     delay(1000)
@@ -470,7 +404,6 @@ fun BattleScreen(
                                 }
                             }
                             isPlayerTurn = true
-                            hero.currentHp = heroHp
                         }
                     }
                 },
@@ -517,7 +450,15 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.2f))
                     Text(skill.description, fontSize = 13.sp, lineHeight = 18.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("⚡ 能量消耗: ${skill.energyRequired}", fontSize = 11.sp, color = Color(0xFFFFD700), fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Bolt,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD700),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(" 能量消耗: ${skill.energyRequired}", fontSize = 11.sp, color = Color(0xFFFFD700), fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         },
