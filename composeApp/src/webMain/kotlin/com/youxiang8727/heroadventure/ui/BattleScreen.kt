@@ -63,6 +63,7 @@ import com.youxiang8727.heroadventure.model.Armor
 import com.youxiang8727.heroadventure.model.Consumable
 import com.youxiang8727.heroadventure.model.Hero
 import com.youxiang8727.heroadventure.model.HeroClass
+import com.youxiang8727.heroadventure.model.HeroClass.Rogue.CRIT_LIFE_STEAL
 import com.youxiang8727.heroadventure.model.HeroStat
 import com.youxiang8727.heroadventure.model.Monster
 import com.youxiang8727.heroadventure.model.ShopItem
@@ -385,7 +386,7 @@ fun BattleScreen(
                                 battleLog = if (isCrit) "🔥 CRITICAL HIT! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
                                 
                                 if (isRogueCritBuffActive && isCrit) {
-                                    val healAmt = (damage * 0.3).toInt()
+                                    val healAmt = (damage * CRIT_LIFE_STEAL).toInt()
                                     heroHp = (heroHp + healAmt).coerceAtMost(currentMaxHp)
                                     battleLog += " (吸血 +$healAmt)"
                                 }

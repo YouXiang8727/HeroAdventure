@@ -21,7 +21,7 @@ sealed class HeroClass(
         passiveDescription = "生命值越低攻擊力越高，每失去 1% 生命提升 0.5% 攻擊力。",
         activeSkill = ActiveSkill(
             name = "血祭衝擊",
-            description = "消耗 15% 目前生命，本回合獲得 10% 額外格擋，且下回合攻擊提升 50% 並造成無視防禦傷害。",
+            description = "消耗 15% 目前生命，本回合獲得 10% 額外格擋，且下回合攻擊提升 50%。",
             energyRequired = 2
         ),
         startingWeapon = "生鏽長劍 (+5 ATK)"
@@ -57,22 +57,23 @@ sealed class HeroClass(
         startingWeapon = "新手匕首 (+4 ATK)"
     ) {
         const val CRIT_MULTIPLIER = 3.0
+        const val CRIT_LIFE_STEAL = 0.3
     }
 
     data object Paladin : HeroClass(
         "聖騎士", 320, 50, 14, 4, 
         critRate = 0.02, blockRate = 0.25,
         passiveName = "聖光治癒",
-        passiveDescription = "每場戰鬥勝利後，恢復 20% 最大生命值。",
+        passiveDescription = "每場戰鬥勝利後，恢復 10% 最大生命值。",
         activeSkill = ActiveSkill(
             name = "聖光制裁",
             description = "造成 [攻擊力 + 最大生命 × 格擋率] 的神聖傷害，並立即觸發一次『聖光治癒』效果。",
-            energyRequired = 3
+            energyRequired = 6
         ),
         startingWeapon = "木盾",
         startingArmor = "舊皮甲 (+30 HP)"
     ) {
-        const val HEAL_PERCENT_ON_VICTORY = 0.20
+        const val HEAL_PERCENT_ON_VICTORY = 0.10
     }
 
     data object Archer : HeroClass(
