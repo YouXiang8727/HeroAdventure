@@ -161,19 +161,20 @@ sealed class HeroClass(
     }
 
     data object Archer : HeroClass(
-        className = "弓箭手", baseHp = 160, hpGrowth = 22, baseAttack = 26, attackGrowth = 7, 
-        critRate = 0.18, blockRate = 0.08,
+        className = "弓箭手", baseHp = 200, hpGrowth = 28, baseAttack = 26, attackGrowth = 7, 
+        critRate = 0.25, blockRate = 0.08,
         passiveName = "精準閃避",
         startingWeapon = "獵人短劍 (+6 ATK)"
     ) {
-        const val DODGE_CHANCE = 0.15
-        const val SKILL_SHOT_COUNT = 4
-        const val ENERGY = 3
+        const val DODGE_CHANCE = 0.20
+        const val SKILL_SHOT_COUNT = 5
+        const val SKILL_DAMAGE_RATE = 0.80
+        const val ENERGY = 2
 
-        override val passiveDescription = "攻擊時有 ${(DODGE_CHANCE * 100).toInt()}% 的機率閃避敵人的反擊傷害。"
+        override val passiveDescription = "擁有 ${(DODGE_CHANCE * 100).toInt()}% 的機率閃避反擊傷害。"
         override val activeSkill = ActiveSkill(
             name = "疾風連射",
-            description = "立即射擊 $SKILL_SHOT_COUNT 次，且閃避反擊機率大幅提升。",
+            description = "立即射擊 $SKILL_SHOT_COUNT 次，每發造成 ${(SKILL_DAMAGE_RATE * 100).toInt()}% 傷害且無視反擊。",
             energyRequired = ENERGY
         )
 
