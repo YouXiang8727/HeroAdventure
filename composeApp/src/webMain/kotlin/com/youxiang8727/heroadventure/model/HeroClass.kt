@@ -21,8 +21,8 @@ sealed class HeroClass(
         passiveDescription = "生命值越低攻擊力越高，每失去 1% 生命提升 0.5% 攻擊力。",
         activeSkill = ActiveSkill(
             name = "血祭衝擊",
-            description = "消耗 15% 目前生命，下回合攻擊提升 50% 並造成無視防禦傷害。",
-            energyRequired = 3
+            description = "消耗 15% 目前生命，本回合獲得 10% 額外格擋，且下回合攻擊提升 50% 並造成無視防禦傷害。",
+            energyRequired = 2
         ),
         startingWeapon = "生鏽長劍 (+5 ATK)"
     ) {
@@ -33,15 +33,15 @@ sealed class HeroClass(
         "法師", 150, 20, 30, 8, 
         critRate = 0.10, blockRate = 0.0,
         passiveName = "法術回響",
-        passiveDescription = "攻擊時有 20% 的機率連續發動兩次攻擊。",
+        passiveDescription = "攻擊時有 25% 的機率連續發動兩次攻擊。",
         activeSkill = ActiveSkill(
             name = "魔力超載",
             description = "下一次攻擊必定觸發連擊，且傷害提升。",
-            energyRequired = 4
+            energyRequired = 3
         ),
         startingWeapon = "學徒法杖 (+8 ATK)"
     ) {
-        const val DOUBLE_ATTACK_CHANCE = 0.20
+        const val DOUBLE_ATTACK_CHANCE = 0.25
     }
 
     data object Rogue : HeroClass(
@@ -63,16 +63,16 @@ sealed class HeroClass(
         "聖騎士", 320, 50, 14, 4, 
         critRate = 0.02, blockRate = 0.25,
         passiveName = "聖光治癒",
-        passiveDescription = "每場戰鬥勝利後，自動恢復 15% 的最大生命值。",
+        passiveDescription = "每場戰鬥勝利後，恢復 20% 最大生命值。",
         activeSkill = ActiveSkill(
-            name = "神聖壁壘",
-            description = "獲得最大生命 20% 的護盾，持續 2 回合。",
-            energyRequired = 5
+            name = "聖光制裁",
+            description = "造成 [攻擊力 + 最大生命 × 格擋率] 的神聖傷害，並立即觸發一次『聖光治癒』效果。",
+            energyRequired = 3
         ),
         startingWeapon = "木盾",
         startingArmor = "舊皮甲 (+30 HP)"
     ) {
-        const val HEAL_PERCENT_ON_VICTORY = 0.15
+        const val HEAL_PERCENT_ON_VICTORY = 0.20
     }
 
     data object Archer : HeroClass(
@@ -82,8 +82,8 @@ sealed class HeroClass(
         passiveDescription = "攻擊時有 15% 的機率閃避敵人的反擊傷害。",
         activeSkill = ActiveSkill(
             name = "疾風連射",
-            description = "立即射擊 3 次，且閃避反擊機率大幅提升。",
-            energyRequired = 4
+            description = "立即射擊 4 次，且閃避反擊機率大幅提升。",
+            energyRequired = 2
         ),
         startingWeapon = "獵人短劍 (+6 ATK)"
     ) {

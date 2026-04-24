@@ -65,7 +65,6 @@ fun App() {
         labelSmall = defaultTypography.labelSmall.copy(fontFamily = myFontFamily)
     )
 
-    // 定義深色主題配色
     val darkColorScheme = darkColorScheme(
         primary = Color(0xFFE94560),
         secondary = Color(0xFF0F3460),
@@ -82,6 +81,9 @@ fun App() {
         typography = typography
     ) {
         var gameState by remember { mutableStateOf<GameState>(GameState.CharacterSelection) }
+        
+        // 用來追蹤連續幾關沒進商店，實現保底機率
+        var stagesWithoutShop by remember { mutableStateOf(0) }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -91,6 +93,7 @@ fun App() {
                 is GameState.CharacterSelection -> {
                     CharacterSelectionScreen(onCharacterSelected = { hero ->
                         val firstMonster = Monster.createRandom(1)
+                        stagesWithoutShop = 0 // 重置
                         gameState = GameState.Battle(hero, firstMonster, 1)
                     })
                 }
@@ -112,13 +115,18 @@ fun App() {
                                 
                                 val nextLevel = state.stageLevel + 1
                                 
-                                if (Random.nextDouble() < 0.25) {
+                                // 基礎機率 20%，每多一關沒進商店就增加 10% 機率
+                                val shopChance = 0.20 + (stagesWithoutShop * 0.10)
+                                
+                                if (Random.nextDouble() < shopChance) {
+                                    stagesWithoutShop = 0 // 進入商店後重置
                                     gameState = GameState.Shop(
                                         hero = state.hero,
                                         items = generateRandomShopItems(nextLevel),
                                         nextStageLevel = nextLevel
                                     )
                                 } else {
+                                    stagesWithoutShop++ // 未進入商店，機率累加
                                     val nextMonster = Monster.createRandom(nextLevel)
                                     gameState = GameState.Battle(state.hero, nextMonster, nextLevel)
                                 }

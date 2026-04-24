@@ -256,23 +256,28 @@ fun BattleScreen(
                                         val sacrifice = (heroHp * 0.15).toInt()
                                         heroHp = (heroHp - sacrifice).coerceAtLeast(1)
                                         isWarriorBuffActive = true
-                                        battleLog = "🩸 獻祭生命，力量湧現！"
+                                        // 戰士主動技現在提供 10% 額外格擋邏輯
+                                        battleLog = "🩸 獻祭生命，力量與守護湧現！"
                                     }
                                     is HeroClass.Mage -> {
                                         isMageNextDoubleActive = true
-                                        battleLog = "🌀 魔力充盈，準備連發！"
+                                        battleLog = "🌀 魔力超載，下回合必發動連擊！"
                                     }
                                     is HeroClass.Rogue -> {
                                         isRogueCritBuffActive = true
                                         battleLog = "🗡️ 鎖定死角，致命一擊！"
                                     }
                                     is HeroClass.Paladin -> {
-                                        shieldHp = (currentMaxHp * 0.2).toInt()
-                                        battleLog = "🛡️ 神聖守護降臨！"
+                                        val damage = (currentAttack + currentMaxHp * currentBlock).toInt()
+                                        launch { shake(monsterShakeOffset) }
+                                        monsterHp = (monsterHp - damage).coerceAtLeast(0)
+                                        val healAmount = (currentMaxHp * hClass.HEAL_PERCENT_ON_VICTORY).toInt()
+                                        heroHp = (heroHp + healAmount).coerceAtMost(currentMaxHp)
+                                        battleLog = "✨ 聖光制裁！造成 $damage 傷害並觸發聖光治癒恢復 $healAmount 生命"
                                     }
                                     is HeroClass.Archer -> {
                                         battleLog = "🏹 疾風連射！"
-                                        repeat(3) {
+                                        repeat(4) { // 弓箭手主動技現在是 4 連射
                                             delay(300)
                                             if (monsterHp > 0) {
                                                 val damage = (currentAttack * 0.6).toInt()
@@ -293,6 +298,7 @@ fun BattleScreen(
                                     onVictory(monster.goldDrop)
                                 } else {
                                     isPlayerTurn = true
+                                    hero.currentHp = heroHp
                                 }
                             }
                         }
@@ -423,7 +429,10 @@ fun BattleScreen(
                                 battleLog = "🏹 精準閃避！避開了反擊！"
                                 delay(600)
                             } else {
-                                val isBlocked = Random.nextDouble() < currentBlock
+                                // 戰士主動技額外格擋邏輯
+                                val warriorBonusBlock = if (hero.heroClass is HeroClass.Warrior && isWarriorBuffActive) 0.1 else 0.0
+                                val isBlocked = Random.nextDouble() < (currentBlock + warriorBonusBlock)
+
                                 val rawMonsterDamage = monster.attack
                                 var monsterDamage = if (isBlocked) (rawMonsterDamage / 2) else rawMonsterDamage
                                 
@@ -450,6 +459,7 @@ fun BattleScreen(
                                 }
                             }
                             isPlayerTurn = true
+                            hero.currentHp = heroHp
                         }
                     }
                 },
