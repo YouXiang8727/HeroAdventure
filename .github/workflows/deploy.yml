@@ -29,9 +29,6 @@ jobs:
 
       - name: Prepare deployment directory
         run: |
-          git config --global user.email "youxiang8727@gmail.com"
-          git config --global user.name "YouXiang8727"
-
           mkdir -p deploy_dist
           # 複製編譯產物
           cp -r composeApp/build/dist/wasmJs/productionExecutable/* deploy_dist/
