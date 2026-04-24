@@ -45,7 +45,7 @@ sealed class HeroClass(
     abstract fun executeActiveSkill(hero: Hero, monster: Monster): String
 
     data object Warrior : HeroClass(
-        className = "戰士", baseHp = 280, hpGrowth = 35, baseAttack = 22, attackGrowth = 6, 
+        className = "戰士", baseHp = 300, hpGrowth = 45, baseAttack = 22, attackGrowth = 6,
         critRate = 0.08, blockRate = 0.15,
         passiveName = "破釜沈舟",
         startingWeapon = "生鏽長劍 (+5 ATK)"
@@ -80,14 +80,14 @@ sealed class HeroClass(
     }
 
     data object Mage : HeroClass(
-        className = "法師", baseHp = 150, hpGrowth = 30, baseAttack = 30, attackGrowth = 10, 
+        className = "法師", baseHp = 150, hpGrowth = 30, baseAttack = 28, attackGrowth = 7,
         critRate = 0.10, blockRate = 0.0,
         passiveName = "元素共鳴",
         startingWeapon = "學徒法杖 (+8 ATK)"
     ) {
         const val DOUBLE_ATTACK_CHANCE = 0.30
         const val SKILL_ATK_MULTIPLIER = 3.0
-        const val ENERGY = 2
+        const val ENERGY = 3
 
         override val passiveDescription = "攻擊時有 ${(DOUBLE_ATTACK_CHANCE * 100).toInt()}% 的機率連續發動兩次攻擊。"
         override val activeSkill = ActiveSkill(
@@ -107,7 +107,7 @@ sealed class HeroClass(
     }
 
     data object Rogue : HeroClass(
-        className = "刺客", baseHp = 180, hpGrowth = 25, baseAttack = 24, attackGrowth = 7, 
+        className = "刺客", baseHp = 180, hpGrowth = 25, baseAttack = 30, attackGrowth = 8,
         critRate = 0.25, blockRate = 0.05,
         passiveName = "暗影步",
         startingWeapon = "新手匕首 (+4 ATK)"
@@ -134,7 +134,7 @@ sealed class HeroClass(
     }
 
     data object Paladin : HeroClass(
-        className = "聖騎士", baseHp = 320, hpGrowth = 45, baseAttack = 14, attackGrowth = 4, 
+        className = "聖騎士", baseHp = 280, hpGrowth = 42, baseAttack = 14, attackGrowth = 4,
         critRate = 0.02, blockRate = 0.25,
         passiveName = "聖光治癒",
         startingWeapon = "木盾",
