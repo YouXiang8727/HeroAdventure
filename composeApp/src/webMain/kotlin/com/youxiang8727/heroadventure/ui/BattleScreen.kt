@@ -66,8 +66,11 @@ import com.youxiang8727.heroadventure.model.Consumable
 import com.youxiang8727.heroadventure.model.Hero
 import com.youxiang8727.heroadventure.model.HeroClass
 import com.youxiang8727.heroadventure.model.HeroStat
+import com.youxiang8727.heroadventure.model.LifeSteal
 import com.youxiang8727.heroadventure.model.Monster
+import com.youxiang8727.heroadventure.model.Regen
 import com.youxiang8727.heroadventure.model.ShopItem
+import com.youxiang8727.heroadventure.model.Thorns
 import com.youxiang8727.heroadventure.model.Weapon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -133,14 +136,64 @@ fun BattleScreen(
                     .graphicsLayer(translationX = monsterShakeOffset.value),
                 contentAlignment = Alignment.Center
             ) {
-                EntityDisplay(
-                    name = monster.type.monsterName,
-                    currentHp = monster.currentHp,
-                    maxHp = monster.maxHp,
-                    attack = monster.attack,
-                    mainColor = Color(0xFFFF4D4D),
-                    isMonster = true
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(contentAlignment = Alignment.Center) {
+                        EntityDisplay(
+                            name = monster.type.monsterName,
+                            currentHp = monster.currentHp,
+                            maxHp = monster.maxHp,
+                            attack = monster.attack,
+                            mainColor = Color(0xFFFF4D4D),
+                            isMonster = true
+                        )
+                        if (monster.isBerserking) {
+                            Surface(
+                                modifier = Modifier.offset(y = 20.dp),
+                                color = Color(0xFFFF0000).copy(alpha = 0.9f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text("💢 狂暴中", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                    if (monster.abilities.isNotEmpty()) {
+                        Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            monster.abilities.forEach { ability ->
+                                TooltipBox(
+                                    positionProvider = rememberTooltipPositionProvider(),
+                                    tooltip = {
+                                        PlainTooltip(
+                                            containerColor = Color(0xFF24243E),
+                                            contentColor = Color.White,
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Column(modifier = Modifier.padding(8.dp).widthIn(max = 200.dp)) {
+                                                Text(ability.name, fontWeight = FontWeight.Bold, color = Color(0xFFFF4D4D), fontSize = 13.sp)
+                                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.White.copy(alpha = 0.2f))
+                                                Text(ability.description, fontSize = 12.sp, lineHeight = 16.sp)
+                                            }
+                                        }
+                                    },
+                                    state = rememberTooltipState()
+                                ) {
+                                    Surface(
+                                        color = Color.Black.copy(alpha = 0.6f),
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFFF4D4D).copy(alpha = 0.5f))
+                                    ) {
+                                        Text(
+                                            ability.name,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFFF4D4D)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             Card(
@@ -313,6 +366,14 @@ fun BattleScreen(
                         scope.launch {
                             isPlayerTurn = false
                             hero.gainEnergy()
+                            
+                            // 怪物回合開始前的再生效果 (百分比形式)
+                            monster.abilities.filterIsInstance<Regen>().forEach { regen ->
+                                val healAmount = (monster.maxHp * regen.rate).toInt()
+                                monster.heal(healAmount)
+                                battleLog = "🌱 ${monster.type.monsterName} 再生了 $healAmount 生命"
+                                delay(400)
+                            }
 
                             suspend fun triggerPassiveEffect() {
                                 isPassiveTriggered = true
@@ -329,7 +390,6 @@ fun BattleScreen(
                                 
                                 var damage = (hero.totalAttack * critMult).toInt()
                                 
-                                // 修正處：檢查主動技傷害加成
                                 if (hero.isWarriorBuffActive) {
                                     val skillMult = hClass.getSkillAtkMultiplier()
                                     damage = (damage * skillMult).toInt()
@@ -342,6 +402,17 @@ fun BattleScreen(
                                 monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
                                 battleLog = if (isCrit) "🔥 CRITICAL HIT! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
                                 
+                                // 觸發怪物反傷 (百分比形式)
+                                monster.abilities.filterIsInstance<Thorns>().forEach { thorns ->
+                                    if (monster.currentHp > 0) {
+                                        delay(300)
+                                        val reflectedDamage = (damage * thorns.rate).toInt()
+                                        hero.takeDamage(reflectedDamage)
+                                        battleLog = "🌵 受到反傷！失去 $reflectedDamage 生命"
+                                        launch { shake(heroShakeOffset) }
+                                    }
+                                }
+
                                 val healAmt = hero.onAfterAttack(damage, isCrit)
                                 if (healAmt > 0) {
                                     battleLog += " (吸血 +$healAmt)"
@@ -397,6 +468,16 @@ fun BattleScreen(
                                     launch { shake(heroShakeOffset) }
                                     hero.takeDamage(monsterDamage)
                                     battleLog = if (finalBlocked) "🛡️ BLOCK! 僅受 $monsterDamage 傷害" else "⚠️ 受到 $monsterDamage 傷害"
+                                    
+                                    // 觸發怪物吸血
+                                    monster.abilities.filterIsInstance<LifeSteal>().forEach { lifeSteal ->
+                                        val healAmount = (monsterDamage * lifeSteal.rate).toInt()
+                                        if (healAmount > 0) {
+                                            delay(300)
+                                            monster.heal(healAmount)
+                                            battleLog = "💉 ${monster.type.monsterName} 吸血恢復了 $healAmount 生命"
+                                        }
+                                    }
                                 }
                                 
                                 if (hero.currentHp <= 0) {

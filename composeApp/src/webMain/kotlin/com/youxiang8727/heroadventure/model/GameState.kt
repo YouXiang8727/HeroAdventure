@@ -34,6 +34,10 @@ class Hero(
     var maxHp by mutableStateOf(initialMaxHp)
     var attack by mutableStateOf(initialAttack)
     var gold by mutableStateOf(initialGold)
+    
+    // 永久屬性加成 (碎片提供)
+    var bonusCritRate by mutableStateOf(0.0)
+    var bonusBlockRate by mutableStateOf(0.0)
 
     // 能量系統
     var energy by mutableStateOf(0)
@@ -50,13 +54,25 @@ class Hero(
     var weapon by mutableStateOf<Weapon?>(null)
     var armor by mutableStateOf<Armor?>(null)
 
-    val baseWithEquipAttack: Int get() = attack + (weapon?.attackBonus ?: 0)
+    // 基礎攻擊力 = 屬性 + 裝備攻擊力
+    val baseWithEquipAttack: Int get() = attack + (weapon?.getBonus(StatType.ATTACK)?.toInt() ?: 0)
+    // 被動加成 (基於基礎攻擊力)
     val attackPassiveBonus: Int get() = heroClass.getPassiveAttackBonus(baseWithEquipAttack, currentHp, totalMaxHp)
+    // 總攻擊力 = 基礎攻擊力 + 被動加成
     val totalAttack: Int get() = baseWithEquipAttack + attackPassiveBonus
-    val totalMaxHp: Int get() = maxHp + (armor?.hpBonus ?: 0)
     
-    val totalCritRate: Double get() = heroClass.critRate
-    val totalBlockRate: Double get() = heroClass.blockRate
+    // 總生命 = 屬性 + 裝備生命
+    val totalMaxHp: Int get() = maxHp + (armor?.getBonus(StatType.HP)?.toInt() ?: 0)
+    
+    // 總爆擊率 = 職業基礎 + 碎片加成 + 武器加成 + 防具加成
+    val totalCritRate: Double get() = (heroClass.critRate + bonusCritRate + 
+            (weapon?.getBonus(StatType.CRIT_RATE) ?: 0.0) + 
+            (armor?.getBonus(StatType.CRIT_RATE) ?: 0.0)).coerceIn(0.0, 1.0)
+            
+    // 總格擋率 = 職業基礎 + 碎片加成 + 武器加成 + 防具加成
+    val totalBlockRate: Double get() = (heroClass.blockRate + bonusBlockRate + 
+            (weapon?.getBonus(StatType.BLOCK_RATE) ?: 0.0) + 
+            (armor?.getBonus(StatType.BLOCK_RATE) ?: 0.0)).coerceIn(0.0, 1.0)
 
     fun takeDamage(damage: Int) {
         val actualDamage = if (shieldHp > 0) {
@@ -141,19 +157,11 @@ class Hero(
     fun useItem(item: ShopItem) {
         val oldMaxHp = totalMaxHp
         when (item) {
-            is HealthPotion -> {
-                heal(item.healAmount)
+            is Consumable -> {
+                item.effects.forEach { it.apply(this) }
                 inventory.remove(item)
-            }
-            is StatShard -> {
-                if (item.hpBonus > 0) {
-                    maxHp += item.hpBonus
-                    currentHp += item.hpBonus
-                }
-                if (item.attackBonus > 0) {
-                    attack += item.attackBonus
-                }
-                inventory.remove(item)
+                // 屬性變化後重新調整血量比例 (主要是生命碎片)
+                adjustHpProportionally(oldMaxHp)
             }
             is Equipment -> {
                 equip(item)

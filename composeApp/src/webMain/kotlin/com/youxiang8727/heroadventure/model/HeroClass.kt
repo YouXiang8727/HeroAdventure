@@ -141,7 +141,7 @@ sealed class HeroClass(
         startingArmor = "舊皮甲 (+30 HP)"
     ) {
         const val VICTORY_HEAL_RATE = 0.10
-        const val ENERGY = 5
+        const val ENERGY = 4
 
         override val passiveDescription = "每場戰鬥勝利後，恢復 ${(VICTORY_HEAL_RATE * 100).toInt()}% 最大生命值。"
         override val activeSkill = ActiveSkill(
