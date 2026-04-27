@@ -42,7 +42,7 @@ sealed class HeroClass(
     open fun getSkillAtkMultiplier(): Double = 1.0
     
     /** 獲取技能預估傷害 */
-    open fun getSkillDamage(hero: Hero, monster: Monster? = null): Int = 0
+    open fun getSkillDamage(hero: Hero, monster: Monster): Int = 0
 
     /** 執行主動技能效果 (回傳戰鬥日誌) */
     abstract fun executeActiveSkill(hero: Hero, monster: Monster): String
@@ -74,7 +74,7 @@ sealed class HeroClass(
         override fun getLifestealAmount(damage: Int, isCrit: Boolean): Int = (damage * LIFESTEAL_RATE).roundToInt()
         override fun getSkillAtkMultiplier(): Double = SKILL_ATK_BUFF
         
-        override fun getSkillDamage(hero: Hero, monster: Monster?): Int {
+        override fun getSkillDamage(hero: Hero, monster: Monster): Int {
             return (hero.totalAttack * SKILL_ATK_BUFF).toInt()
         }
 
@@ -106,7 +106,7 @@ sealed class HeroClass(
         override fun getDoubleAttackChance(): Double = DOUBLE_ATTACK_CHANCE
         override fun getSkillAtkMultiplier(): Double = SKILL_ATK_MULTIPLIER
 
-        override fun getSkillDamage(hero: Hero, monster: Monster?): Int {
+        override fun getSkillDamage(hero: Hero, monster: Monster): Int {
             return (hero.totalAttack * SKILL_ATK_MULTIPLIER).toInt()
         }
 
@@ -125,10 +125,10 @@ sealed class HeroClass(
     ) {
         const val CRIT_MULT = 2.5
         const val BASE_DODGE_CHANCE = 0.25
-        const val SKILL_BLEED_EXTRA_DAMAGE_RATE = 0.50
+        const val SKILL_BLEED_EXTRA_DAMAGE_RATE = 0.8
         const val ENERGY = 3
 
-        override val passiveDescription = "爆擊倍率為 ${CRIT_MULT.toInt()} 倍，且擁有 ${(BASE_DODGE_CHANCE * 100).toInt()}% 基礎閃避率。"
+        override val passiveDescription = "爆擊倍率為 $CRIT_MULT 倍，且擁有 ${(BASE_DODGE_CHANCE * 100).toInt()}% 基礎閃避率。"
         override val activeSkill = ActiveSkill(
             name = "流血",
             description = "下次攻擊根據對方損失的生命造成 ${(SKILL_BLEED_EXTRA_DAMAGE_RATE * 100).toInt()}% 額外傷害。",
@@ -137,8 +137,7 @@ sealed class HeroClass(
 
         override fun getCritMultiplier(): Double = CRIT_MULT
         override fun getDodgeChance(): Double = BASE_DODGE_CHANCE
-        override fun getSkillDamage(hero: Hero, monster: Monster?): Int {
-            if (monster == null) return 0
+        override fun getSkillDamage(hero: Hero, monster: Monster): Int {
             val lostHp = monster.maxHp - monster.currentHp
             return (lostHp * SKILL_BLEED_EXTRA_DAMAGE_RATE).toInt()
         }
@@ -165,7 +164,7 @@ sealed class HeroClass(
             energyRequired = ENERGY
         )
 
-        override fun getSkillDamage(hero: Hero, monster: Monster?): Int {
+        override fun getSkillDamage(hero: Hero, monster: Monster): Int {
             return (hero.totalAttack + hero.totalMaxHp * hero.totalBlockRate).toInt()
         }
 
@@ -198,7 +197,7 @@ sealed class HeroClass(
             energyRequired = ENERGY
         )
 
-        override fun getSkillDamage(hero: Hero, monster: Monster?): Int {
+        override fun getSkillDamage(hero: Hero, monster: Monster): Int {
             return (hero.totalAttack * SKILL_DAMAGE_RATE).toInt()
         }
 

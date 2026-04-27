@@ -60,7 +60,7 @@ class StatShard(
 ) : Consumable(name, effects, price, rarity, level) {
     companion object {
         fun createRandom(level: Int): StatShard {
-            val isAttackShard = Random.nextBoolean()
+            val shardType = Random.nextDouble()
             val rarity = when (Random.nextDouble()) {
                 in 0.0..0.7 -> Rarity.RARE
                 in 0.7..0.92 -> Rarity.EPIC
@@ -74,24 +74,37 @@ class StatShard(
                 else -> 1.0
             }
 
-            return if (isAttackShard) {
-                val attackBonus = (4 * multiplier).toInt().coerceAtLeast(1)
-                StatShard(
-                    name = "${rarity.label}攻擊碎片",
-                    price = (120 * multiplier + level * 10).toInt(),
-                    rarity = rarity,
-                    level = level,
-                    effects = listOf(PermanentStatEffect(StatModifier(StatType.ATTACK, attackBonus.toDouble())))
-                )
-            } else {
-                val hpBonus = (20 * multiplier).toInt().coerceAtLeast(5)
-                StatShard(
-                    name = "${rarity.label}生命碎片",
-                    price = (100 * multiplier + level * 8).toInt(),
-                    rarity = rarity,
-                    level = level,
-                    effects = listOf(PermanentStatEffect(StatModifier(StatType.HP, hpBonus.toDouble())))
-                )
+            return when {
+                shardType < 0.4 -> { // 40% 攻擊
+                    val attackBonus = (4 * multiplier).toInt().coerceAtLeast(1)
+                    StatShard(
+                        name = "${rarity.label}攻擊碎片",
+                        price = (120 * multiplier + level * 10).toInt(),
+                        rarity = rarity,
+                        level = level,
+                        effects = listOf(PermanentStatEffect(StatModifier(StatType.ATTACK, attackBonus.toDouble())))
+                    )
+                }
+                shardType < 0.8 -> { // 40% 生命
+                    val hpBonus = (20 * multiplier).toInt().coerceAtLeast(5)
+                    StatShard(
+                        name = "${rarity.label}生命碎片",
+                        price = (100 * multiplier + level * 8).toInt(),
+                        rarity = rarity,
+                        level = level,
+                        effects = listOf(PermanentStatEffect(StatModifier(StatType.HP, hpBonus.toDouble())))
+                    )
+                }
+                else -> { // 20% 爆擊率
+                    val critBonus = 0.02 * multiplier
+                    StatShard(
+                        name = "${rarity.label}爆擊碎片",
+                        price = (150 * multiplier + level * 12).toInt(),
+                        rarity = rarity,
+                        level = level,
+                        effects = listOf(PermanentStatEffect(StatModifier(StatType.CRIT_RATE, critBonus, true)))
+                    )
+                }
             }
         }
     }
