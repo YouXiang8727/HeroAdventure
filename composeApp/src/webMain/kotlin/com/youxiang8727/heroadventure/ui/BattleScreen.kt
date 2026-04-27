@@ -9,7 +9,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -76,7 +74,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BattleScreen(
     hero: Hero,
@@ -269,7 +267,7 @@ fun BattleScreen(
                             }
                         }
 
-                        ActiveSkillTextButton(hero, isPlayerTurn && !isBattleOver) {
+                        ActiveSkillTextButton(hero, monster, isPlayerTurn && !isBattleOver) {
                             scope.launch {
                                 isPlayerTurn = false
                                 battleLog = "🌟 施放：${hero.heroClass.activeSkill.name}！"
@@ -284,7 +282,7 @@ fun BattleScreen(
                                     repeat(shotCount) {
                                         delay(300)
                                         if (monster.currentHp > 0) {
-                                            val damage = hero.heroClass.getSkillDamage(hero)
+                                            val damage = hero.heroClass.getSkillDamage(hero, monster)
                                             launch { shake(monsterShakeOffset) }
                                             monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
                                             battleLog = "💥 快速射擊！造成 $damage 傷害"
@@ -386,10 +384,18 @@ fun BattleScreen(
                                 }
 
                                 damage = (damage * damageMultiplier).toInt()
+
+                                if (hero.isRogueBleedActive) {
+                                    val extraDamage = hero.heroClass.getSkillDamage(hero, monster)
+                                    if (extraDamage > 0) {
+                                        damage += extraDamage
+                                    }
+                                    hero.isRogueBleedActive = false
+                                }
                                 
                                 launch { shake(monsterShakeOffset) }
                                 monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
-                                battleLog = if (isCrit) "🔥 CRITICAL HIT! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
+                                battleLog = if (isCrit) "🔥 爆擊! 造成 $damage 傷害" else "💥 擊中！造成 $damage 傷害"
                                 
                                 // 觸發怪物反傷 (百分比形式)
                                 monster.abilities.filterIsInstance<Thorns>().forEach { thorns ->
@@ -411,15 +417,13 @@ fun BattleScreen(
                                 return monster.currentHp <= 0
                             }
 
-                            val critBonus = if (hero.isRogueCritBuffActive) 0.70 else 0.0
-                            if (performAttack(critChanceBonus = critBonus)) {
+                            if (performAttack()) {
                                 isBattleOver = true
                                 battleLog = "🏆 勝利！擊敗強敵！"
                                 delay(1000)
                                 onVictory(monster.goldDrop)
                                 return@launch
                             }
-                            hero.isRogueCritBuffActive = false
 
                             val hClass = hero.heroClass
                             val doubleChance = hClass.getDoubleAttackChance()
@@ -486,7 +490,7 @@ fun BattleScreen(
                 shape = RoundedCornerShape(23.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE94560))
             ) {
-                Text("發 動 攻 議", fontWeight = FontWeight.Black)
+                Text("發 動 攻 擊", fontWeight = FontWeight.Black)
             }
         }
     }
@@ -494,7 +498,7 @@ fun BattleScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
+fun ActiveSkillTextButton(hero: Hero, monster: Monster, isEnabled: Boolean, onClick: () -> Unit) {
     val skill = hero.heroClass.activeSkill
     val isReady = hero.energy >= hero.maxEnergy
     
@@ -524,12 +528,14 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.2f))
                     Text(skill.description, fontSize = 13.sp, lineHeight = 18.sp)
                     
-                    val skillDamage = hero.heroClass.getSkillDamage(hero)
+                    val skillDamage = hero.heroClass.getSkillDamage(hero, monster)
                     if (skillDamage > 0) {
                         Spacer(modifier = Modifier.height(4.dp))
-                        val damageLabel = if (hero.heroClass is HeroClass.Archer) 
-                            "預估傷害: $skillDamage × ${HeroClass.Archer.MIN_SHOTS}~${HeroClass.Archer.MAX_SHOTS} 次"
-                            else "預估傷害: $skillDamage"
+                        val damageLabel = when (hero.heroClass) {
+                            is HeroClass.Archer -> "預估傷害: $skillDamage × ${HeroClass.Archer.MIN_SHOTS}~${HeroClass.Archer.MAX_SHOTS} 次"
+                            is HeroClass.Rogue -> "預估額外傷害: +$skillDamage"
+                            else -> "預估傷害: $skillDamage"
+                        }
                         Text(damageLabel, fontSize = 12.sp, color = Color(0xFFFF4D4D), fontWeight = FontWeight.Bold)
                     }
 
@@ -578,7 +584,7 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryRow(title: String, items: List<ShopItem>, isEnabled: Boolean, onUse: (ShopItem) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {

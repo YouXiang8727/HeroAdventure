@@ -47,6 +47,7 @@ class Hero(
     var isWarriorBuffActive by mutableStateOf(false)
     var isMageNextDoubleActive by mutableStateOf(false)
     var isRogueCritBuffActive by mutableStateOf(false)
+    var isRogueBleedActive by mutableStateOf(false)
     var shieldHp by mutableStateOf(0)
 
     val inventory = mutableStateListOf<ShopItem>()
@@ -131,6 +132,7 @@ class Hero(
         isWarriorBuffActive = false
         isMageNextDoubleActive = false
         isRogueCritBuffActive = false
+        isRogueBleedActive = false
         shieldHp = 0
     }
 
