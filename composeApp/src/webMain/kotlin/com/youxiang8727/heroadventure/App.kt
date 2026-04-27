@@ -22,18 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import com.youxiang8727.heroadventure.model.Axe
 import com.youxiang8727.heroadventure.model.GameState
-import com.youxiang8727.heroadventure.model.HealthPotion
-import com.youxiang8727.heroadventure.model.HeavyArmor
-import com.youxiang8727.heroadventure.model.HeroClass
-import com.youxiang8727.heroadventure.model.LightArmor
 import com.youxiang8727.heroadventure.model.Monster
-import com.youxiang8727.heroadventure.model.Rarity
-import com.youxiang8727.heroadventure.model.ShopItem
-import com.youxiang8727.heroadventure.model.Staff
-import com.youxiang8727.heroadventure.model.StatShard
-import com.youxiang8727.heroadventure.model.Sword
+import com.youxiang8727.heroadventure.model.Shop
 import com.youxiang8727.heroadventure.ui.BattleScreen
 import com.youxiang8727.heroadventure.ui.CharacterSelectionScreen
 import com.youxiang8727.heroadventure.ui.ShopScreen
@@ -112,7 +103,7 @@ fun App() {
                                     stagesWithoutShop = 0
                                     gameState = GameState.Shop(
                                         hero = state.hero,
-                                        items = generateRandomShopItems(nextLevel),
+                                        items = Shop.generateItems(nextLevel),
                                         nextStageLevel = nextLevel
                                     )
                                 } else {
@@ -155,118 +146,4 @@ fun App() {
             }
         }
     }
-}
-
-private fun generateRandomShopItems(level: Int): List<ShopItem> {
-    val items = mutableListOf<ShopItem>()
-    
-    // 1. 基礎藥水 (大幅漲價)
-    val basicHeal = 30 + level * 5
-    items.add(HealthPotion(
-        name = "普通生命藥水",
-        healAmount = basicHeal,
-        price = 30 + level * 3,
-        rarity = Rarity.COMMON
-    ))
-    
-    // 2. 隨機藥水 (係數提升)
-    if (Random.nextDouble() < 0.6) {
-        val potionRarity = when (Random.nextDouble()) {
-            in 0.0..0.5 -> Rarity.RARE
-            in 0.5..0.85 -> Rarity.EPIC
-            else -> Rarity.LEGENDARY
-        }
-        
-        val potionHealMultiplier = when (potionRarity) {
-            Rarity.COMMON -> 1.0
-            Rarity.RARE -> 2.5
-            Rarity.EPIC -> 5.0
-            Rarity.LEGENDARY -> 10.0
-        }
-        
-        val baseHeal = 25 + level * 5
-        items.add(HealthPotion(
-            name = "${potionRarity.label}生命藥水",
-            healAmount = (baseHeal * potionHealMultiplier).toInt(),
-            price = (25 * potionHealMultiplier + level * 5).toInt(),
-            rarity = potionRarity
-        ))
-    }
-
-    // 3. 永久屬性碎片 (顯著漲價，因為這是永久增益)
-    if (Random.nextDouble() < 0.7) {
-        val isAttackShard = Random.nextBoolean()
-        val rarity = when (Random.nextDouble()) {
-            in 0.0..0.7 -> Rarity.RARE
-            in 0.7..0.92 -> Rarity.EPIC
-            else -> Rarity.LEGENDARY
-        }
-        
-        val multiplier = when (rarity) {
-            Rarity.RARE -> 1.0
-            Rarity.EPIC -> 2.5
-            Rarity.LEGENDARY -> 6.0
-            else -> 1.0
-        }
-
-        if (isAttackShard) {
-            val attackBonus = (4 * multiplier).toInt().coerceAtLeast(1)
-            items.add(StatShard(
-                name = "${rarity.label}攻擊碎片",
-                attackBonus = attackBonus,
-                price = (120 * multiplier + level * 10).toInt(),
-                rarity = rarity
-            ))
-        } else {
-            val hpBonus = (20 * multiplier).toInt().coerceAtLeast(5)
-            items.add(StatShard(
-                name = "${rarity.label}生命碎片",
-                hpBonus = hpBonus,
-                price = (100 * multiplier + level * 8).toInt(),
-                rarity = rarity
-            ))
-        }
-    }
-    
-    // 4. 裝備類 (基礎價格上調)
-    val equipmentCount = Random.nextInt(2, 5)
-    repeat(equipmentCount) {
-        val rarity = when (Random.nextDouble()) {
-            in 0.0..0.5 -> Rarity.COMMON
-            in 0.5..0.8 -> Rarity.RARE
-            in 0.8..0.95 -> Rarity.EPIC
-            else -> Rarity.LEGENDARY
-        }
-        
-        val multiplier = when (rarity) {
-            Rarity.COMMON -> 1.0
-            Rarity.RARE -> 2.0
-            Rarity.EPIC -> 4.0
-            Rarity.LEGENDARY -> 8.0
-        }
-        
-        val isWeapon = Random.nextBoolean()
-        if (isWeapon) {
-            val weaponType = Random.nextInt(3)
-            val baseAttack = (12 + level * 3) * multiplier
-            val price = (60 + level * 8) * multiplier
-            
-            items.add(when (weaponType) {
-                0 -> Sword("${rarity.label}長劍", baseAttack.toInt(), price.toInt(), rarity, level)
-                1 -> Axe("${rarity.label}戰斧", (baseAttack * 1.2).toInt(), (price * 1.1).toInt(), rarity, level)
-                else -> Staff("${rarity.label}法杖", (baseAttack * 0.9).toInt(), (price * 0.9).toInt(), rarity, level)
-            })
-        } else {
-            val armorType = Random.nextInt(2)
-            val baseHp = (45 + level * 10) * multiplier
-            val price = (55 + level * 7) * multiplier
-            
-            items.add(when (armorType) {
-                0 -> LightArmor("${rarity.label}皮甲", baseHp.toInt(), price.toInt(), rarity, level)
-                else -> HeavyArmor("${rarity.label}板甲", (baseHp * 1.5).toInt(), (price * 1.3).toInt(), rarity, level)
-            })
-        }
-    }
-
-    return items
 }

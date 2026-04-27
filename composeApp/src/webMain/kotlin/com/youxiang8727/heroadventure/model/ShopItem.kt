@@ -1,6 +1,7 @@
 package com.youxiang8727.heroadventure.model
 
 import androidx.compose.ui.graphics.Color
+import kotlin.random.Random
 
 enum class Rarity(val label: String, val color: Color) {
     COMMON("普通", Color(0xFF9E9E9E)),
@@ -89,7 +90,7 @@ open class Consumable(
     override val description: String get() = effects.joinToString("，") { it.description }
 }
 
-// --- 具體消耗品類別 (維持向後兼容) ---
+// --- 具體消耗品類別 ---
 
 class HealthPotion(
     name: String = "生命藥水",
@@ -97,7 +98,29 @@ class HealthPotion(
     price: Int,
     rarity: Rarity = Rarity.COMMON,
     level: Int = 1
-) : Consumable(name, listOf(HealEffect(healAmount)), price, rarity, level)
+) : Consumable(name, listOf(HealEffect(healAmount)), price, rarity, level) {
+    companion object {
+        fun createRandom(level: Int, rarity: Rarity = Rarity.COMMON): HealthPotion {
+            val baseHeal = 40 + level * 8
+            val basePrice = 40 + level * 6
+            
+            val (healMult, priceMult) = when (rarity) {
+                Rarity.COMMON -> 1.0 to 1.0
+                Rarity.RARE -> 2.5 to 2.2
+                Rarity.EPIC -> 6.0 to 4.5
+                Rarity.LEGENDARY -> 15.0 to 8.5
+            }
+            
+            return HealthPotion(
+                name = if (rarity == Rarity.COMMON) "普通生命藥水" else "${rarity.label}生命藥水",
+                healAmount = (baseHeal * healMult).toInt(),
+                price = (basePrice * priceMult).toInt(),
+                rarity = rarity,
+                level = level
+            )
+        }
+    }
+}
 
 class StatShard(
     name: String,
@@ -113,7 +136,45 @@ class StatShard(
         if (attackBonus != 0) add(PermanentStatEffect(StatModifier(StatType.ATTACK, attackBonus.toDouble())))
     },
     price, rarity, level
-)
+) {
+    companion object {
+        fun createRandom(level: Int): StatShard {
+            val isAttackShard = Random.nextBoolean()
+            val rarity = when (Random.nextDouble()) {
+                in 0.0..0.7 -> Rarity.RARE
+                in 0.7..0.92 -> Rarity.EPIC
+                else -> Rarity.LEGENDARY
+            }
+            
+            val multiplier = when (rarity) {
+                Rarity.RARE -> 1.0
+                Rarity.EPIC -> 2.5
+                Rarity.LEGENDARY -> 6.0
+                else -> 1.0
+            }
+
+            return if (isAttackShard) {
+                val attackBonus = (4 * multiplier).toInt().coerceAtLeast(1)
+                StatShard(
+                    name = "${rarity.label}攻擊碎片",
+                    attackBonus = attackBonus,
+                    price = (120 * multiplier + level * 10).toInt(),
+                    rarity = rarity,
+                    level = level
+                )
+            } else {
+                val hpBonus = (20 * multiplier).toInt().coerceAtLeast(5)
+                StatShard(
+                    name = "${rarity.label}生命碎片",
+                    hpBonus = hpBonus,
+                    price = (100 * multiplier + level * 8).toInt(),
+                    rarity = rarity,
+                    level = level
+                )
+            }
+        }
+    }
+}
 
 /**
  * 裝備基類
@@ -129,8 +190,47 @@ sealed class Equipment(
     
     fun getBonus(type: StatType): Double = stats.filter { it.type == type }.sumOf { it.value }
 
-    // 鍛造或特殊標籤可存放於此
     val metadata = mutableMapOf<String, Any>()
+    
+    companion object {
+        fun createRandom(level: Int): Equipment {
+            val rarity = when (Random.nextDouble()) {
+                in 0.0..0.5 -> Rarity.COMMON
+                in 0.5..0.8 -> Rarity.RARE
+                in 0.8..0.95 -> Rarity.EPIC
+                else -> Rarity.LEGENDARY
+            }
+            
+            val multiplier = when (rarity) {
+                Rarity.COMMON -> 1.0
+                Rarity.RARE -> 2.0
+                Rarity.EPIC -> 4.0
+                Rarity.LEGENDARY -> 8.0
+            }
+            
+            val isWeapon = Random.nextBoolean()
+            return if (isWeapon) {
+                val weaponType = Random.nextInt(3)
+                val baseAttack = (12 + level * 3) * multiplier
+                val price = (60 + level * 8) * multiplier
+                
+                when (weaponType) {
+                    0 -> Sword("${rarity.label}長劍", baseAttack.toInt(), price.toInt(), rarity, level)
+                    1 -> Axe("${rarity.label}戰斧", (baseAttack * 1.2).toInt(), (price * 1.1).toInt(), rarity, level)
+                    else -> Staff("${rarity.label}法杖", (baseAttack * 0.9).toInt(), (price * 0.9).toInt(), rarity, level)
+                }
+            } else {
+                val armorType = Random.nextInt(2)
+                val baseHp = (45 + level * 10) * multiplier
+                val price = (55 + level * 7) * multiplier
+                
+                when (armorType) {
+                    0 -> LightArmor("${rarity.label}皮甲", baseHp.toInt(), price.toInt(), rarity, level)
+                    else -> HeavyArmor("${rarity.label}板甲", (baseHp * 1.5).toInt(), (price * 1.3).toInt(), rarity, level)
+                }
+            }
+        }
+    }
 }
 
 open class Weapon(
@@ -140,7 +240,6 @@ open class Weapon(
     rarity: Rarity = Rarity.COMMON,
     level: Int = 1
 ) : Equipment(name, stats, price, rarity, level) {
-    // 向後兼容 attackBonus 屬性
     val attackBonus: Int get() = getBonus(StatType.ATTACK).toInt()
 }
 
@@ -151,11 +250,10 @@ open class Armor(
     rarity: Rarity = Rarity.COMMON,
     level: Int = 1
 ) : Equipment(name, stats, price, rarity, level) {
-    // 向後兼容 hpBonus 屬性
     val hpBonus: Int get() = getBonus(StatType.HP).toInt()
 }
 
-// --- 具體裝備類別 (維持向後兼容) ---
+// --- 具體裝備類別 ---
 
 class Sword(name: String, attack: Int, price: Int, rarity: Rarity = Rarity.COMMON, level: Int = 1) : 
     Weapon(name, listOf(StatModifier(StatType.ATTACK, attack.toDouble())), price, rarity, level)
