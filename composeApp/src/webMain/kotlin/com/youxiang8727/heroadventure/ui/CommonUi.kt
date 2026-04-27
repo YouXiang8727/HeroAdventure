@@ -61,7 +61,7 @@ fun StatBadge(stat: HeroStat, modifier: Modifier = Modifier) {
 }
 
 /**
- * 共用的實體顯示元件 (血條 + 名字 + 攻擊力 + 被動加成)
+ * 共用的實體顯示元件 (血條 + 名字 + 攻擊力 + 狀態)
  */
 @Composable
 fun EntityDisplay(
@@ -75,7 +75,8 @@ fun EntityDisplay(
     hpBarWidth: Dp = 200.dp,
     hpBarHeight: Dp = 18.dp,
     fontSize: TextUnit = 14.sp,
-    passiveBonus: Int = 0 // 新增：被動加成數值
+    passiveBonus: Int = 0,
+    isBerserking: Boolean = false // 新增：狂暴狀態旗標
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -87,9 +88,9 @@ fun EntityDisplay(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Surface(
-                color = Color.White.copy(alpha = 0.15f), 
+                color = if (isBerserking) Color(0xFFFF0000).copy(alpha = 0.2f) else Color.White.copy(alpha = 0.15f), 
                 shape = RoundedCornerShape(4.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                border = BorderStroke(1.dp, if (isBerserking) Color(0xFFFF4D4D) else Color.White.copy(alpha = 0.2f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
@@ -98,15 +99,21 @@ fun EntityDisplay(
                     Text(
                         text = "ATK: $attack",
                         fontSize = (fontSize.value * 0.75).sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
+                        fontWeight = FontWeight.Black,
+                        color = if (isBerserking) Color(0xFFFF4D4D) else Color.White
                     )
                     if (passiveBonus > 0) {
                         Text(
                             text = " (+$passiveBonus)",
                             fontSize = (fontSize.value * 0.65).sp,
                             fontWeight = FontWeight.Black,
-                            color = Color(0xFF4DFF88) // 綠色代表被動加成
+                            color = Color(0xFF4DFF88)
+                        )
+                    }
+                    if (isBerserking) {
+                        Text(
+                            text = " 💢",
+                            fontSize = (fontSize.value * 0.75).sp,
                         )
                     }
                 }

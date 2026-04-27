@@ -40,6 +40,9 @@ sealed class HeroClass(
 
     /** 獲取主動技能帶來的傷害加成倍率 */
     open fun getSkillAtkMultiplier(): Double = 1.0
+    
+    /** 獲取技能預估傷害 */
+    open fun getSkillDamage(hero: Hero): Int = 0
 
     /** 執行主動技能效果 (回傳戰鬥日誌) */
     abstract fun executeActiveSkill(hero: Hero, monster: Monster): String
@@ -71,6 +74,10 @@ sealed class HeroClass(
         override fun getLifestealAmount(damage: Int, isCrit: Boolean): Int = (damage * LIFESTEAL_RATE).roundToInt()
         override fun getSkillAtkMultiplier(): Double = SKILL_ATK_BUFF
         
+        override fun getSkillDamage(hero: Hero): Int {
+            return (hero.totalAttack * SKILL_ATK_BUFF).toInt()
+        }
+
         override fun executeActiveSkill(hero: Hero, monster: Monster): String {
             val sacrifice = (hero.currentHp * SKILL_SACRIFICE_RATE).toInt()
             hero.takeDamageRaw(sacrifice)
@@ -98,6 +105,10 @@ sealed class HeroClass(
 
         override fun getDoubleAttackChance(): Double = DOUBLE_ATTACK_CHANCE
         override fun getSkillAtkMultiplier(): Double = SKILL_ATK_MULTIPLIER
+
+        override fun getSkillDamage(hero: Hero): Int {
+            return (hero.totalAttack * SKILL_ATK_MULTIPLIER).toInt()
+        }
 
         override fun executeActiveSkill(hero: Hero, monster: Monster): String {
             hero.isMageNextDoubleActive = true
@@ -150,9 +161,13 @@ sealed class HeroClass(
             energyRequired = ENERGY
         )
 
+        override fun getSkillDamage(hero: Hero): Int {
+            return (hero.totalAttack + hero.totalMaxHp * hero.totalBlockRate).toInt()
+        }
+
         override fun getHealPercentOnVictory(): Double = VICTORY_HEAL_RATE
         override fun executeActiveSkill(hero: Hero, monster: Monster): String {
-            val damage = (hero.totalAttack + hero.totalMaxHp * hero.totalBlockRate).toInt()
+            val damage = getSkillDamage(hero)
             monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
             val healAmount = (hero.totalMaxHp * VICTORY_HEAL_RATE).toInt()
             hero.heal(healAmount)
@@ -167,16 +182,21 @@ sealed class HeroClass(
         startingWeapon = "獵人短劍 (+6 ATK)"
     ) {
         const val DODGE_CHANCE = 0.20
-        const val SKILL_SHOT_COUNT = 5
+        const val MIN_SHOTS = 3
+        const val MAX_SHOTS = 5
         const val SKILL_DAMAGE_RATE = 0.80
         const val ENERGY = 2
 
         override val passiveDescription = "擁有 ${(DODGE_CHANCE * 100).toInt()}% 的機率閃避反擊傷害。"
         override val activeSkill = ActiveSkill(
             name = "疾風連射",
-            description = "立即射擊 $SKILL_SHOT_COUNT 次，每發造成 ${(SKILL_DAMAGE_RATE * 100).toInt()}% 傷害且無視反擊。",
+            description = "立即射擊 $MIN_SHOTS~$MAX_SHOTS 次，每發造成 ${(SKILL_DAMAGE_RATE * 100).toInt()}% 傷害且無視反擊。",
             energyRequired = ENERGY
         )
+
+        override fun getSkillDamage(hero: Hero): Int {
+            return (hero.totalAttack * SKILL_DAMAGE_RATE).toInt()
+        }
 
         override fun getDodgeChance(): Double = DODGE_CHANCE
         override fun executeActiveSkill(hero: Hero, monster: Monster): String {

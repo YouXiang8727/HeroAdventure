@@ -137,25 +137,15 @@ fun BattleScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(contentAlignment = Alignment.Center) {
-                        EntityDisplay(
-                            name = monster.type.monsterName,
-                            currentHp = monster.currentHp,
-                            maxHp = monster.maxHp,
-                            attack = monster.attack,
-                            mainColor = Color(0xFFFF4D4D),
-                            isMonster = true
-                        )
-                        if (monster.isBerserking) {
-                            Surface(
-                                modifier = Modifier.offset(y = 20.dp),
-                                color = Color(0xFFFF0000).copy(alpha = 0.9f),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                Text("💢 狂暴中", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
-                        }
-                    }
+                    EntityDisplay(
+                        name = monster.type.monsterName,
+                        currentHp = monster.currentHp,
+                        maxHp = monster.maxHp,
+                        attack = monster.attack,
+                        mainColor = Color(0xFFFF4D4D),
+                        isMonster = true,
+                        isBerserking = monster.isBerserking
+                    )
                     if (monster.abilities.isNotEmpty()) {
                         Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             monster.abilities.forEach { ability ->
@@ -218,26 +208,24 @@ fun BattleScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(contentAlignment = Alignment.Center) {
-                        EntityDisplay(
-                            name = hero.heroClass.className,
-                            currentHp = hero.currentHp,
-                            maxHp = hero.totalMaxHp,
-                            attack = hero.baseWithEquipAttack,
-                            passiveBonus = hero.attackPassiveBonus,
-                            mainColor = Color(0xFF4DFF88),
-                            isMonster = false
-                        )
-                        if (hero.shieldHp > 0) {
-                            Surface(
-                                modifier = Modifier.offset(y = 20.dp),
-                                color = Color(0xFF4DFFFF).copy(alpha = 0.9f),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                Text("🛡️ ${hero.shieldHp}", modifier = Modifier.padding(horizontal = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            }
+                    if (hero.shieldHp > 0) {
+                        Surface(
+                            color = Color(0xFF4DFFFF).copy(alpha = 0.9f),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        ) {
+                            Text("🛡️ ${hero.shieldHp}", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                    EntityDisplay(
+                        name = hero.heroClass.className,
+                        currentHp = hero.currentHp,
+                        maxHp = hero.totalMaxHp,
+                        attack = hero.baseWithEquipAttack,
+                        passiveBonus = hero.attackPassiveBonus,
+                        mainColor = Color(0xFF4DFF88),
+                        isMonster = false
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Row(
@@ -292,10 +280,11 @@ fun BattleScreen(
                                 hero.resetEnergy()
 
                                 if (hero.heroClass is HeroClass.Archer) {
-                                    repeat(HeroClass.Archer.SKILL_SHOT_COUNT) {
+                                    val shotCount = (HeroClass.Archer.MIN_SHOTS..HeroClass.Archer.MAX_SHOTS).random()
+                                    repeat(shotCount) {
                                         delay(300)
                                         if (monster.currentHp > 0) {
-                                            val damage = (hero.totalAttack * 0.6).toInt()
+                                            val damage = hero.heroClass.getSkillDamage(hero)
                                             launch { shake(monsterShakeOffset) }
                                             monster.currentHp = (monster.currentHp - damage).coerceAtLeast(0)
                                             battleLog = "💥 快速射擊！造成 $damage 傷害"
@@ -497,7 +486,7 @@ fun BattleScreen(
                 shape = RoundedCornerShape(23.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE94560))
             ) {
-                Text("發 動 攻 擊", fontWeight = FontWeight.Black)
+                Text("發 動 攻 議", fontWeight = FontWeight.Black)
             }
         }
     }
@@ -534,6 +523,16 @@ fun ActiveSkillTextButton(hero: Hero, isEnabled: Boolean, onClick: () -> Unit) {
                     Text(skill.name, fontWeight = FontWeight.ExtraBold, color = activeColor, fontSize = 16.sp)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = Color.White.copy(alpha = 0.2f))
                     Text(skill.description, fontSize = 13.sp, lineHeight = 18.sp)
+                    
+                    val skillDamage = hero.heroClass.getSkillDamage(hero)
+                    if (skillDamage > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val damageLabel = if (hero.heroClass is HeroClass.Archer) 
+                            "預估傷害: $skillDamage × ${HeroClass.Archer.MIN_SHOTS}~${HeroClass.Archer.MAX_SHOTS} 次"
+                            else "預估傷害: $skillDamage"
+                        Text(damageLabel, fontSize = 12.sp, color = Color(0xFFFF4D4D), fontWeight = FontWeight.Bold)
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.Icon(
