@@ -82,7 +82,7 @@ fun App() {
             when (val state = gameState) {
                 is GameState.CharacterSelection -> {
                     CharacterSelectionScreen(onCharacterSelected = { hero ->
-                        val firstMonster = Monster.createRandom(1)
+                        val firstMonster = Monster.createRandom(1, hero)
                         stagesWithoutShop = 0
                         gameState = GameState.Battle(hero, firstMonster, 1)
                     })
@@ -108,7 +108,7 @@ fun App() {
                                     )
                                 } else {
                                     stagesWithoutShop++
-                                    val nextMonster = Monster.createRandom(nextLevel)
+                                    val nextMonster = Monster.createRandom(nextLevel, state.hero)
                                     gameState = GameState.Battle(state.hero, nextMonster, nextLevel)
                                 }
                             },
@@ -123,7 +123,7 @@ fun App() {
                         hero = state.hero,
                         shopItems = state.items,
                         onContinue = {
-                            val nextMonster = Monster.createRandom(state.nextStageLevel)
+                            val nextMonster = Monster.createRandom(state.nextStageLevel, state.hero)
                             gameState = GameState.Battle(state.hero, nextMonster, state.nextStageLevel)
                         }
                     )
